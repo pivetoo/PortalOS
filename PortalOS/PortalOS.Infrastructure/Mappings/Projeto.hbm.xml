@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<hibernate-mapping xmlns="urn:nhibernate-mapping-2.2"  assembly="PortalOS.Domain"  namespace="PortalOS.Domain.Entities">
+  <class name="Projeto" table="Projeto" lazy="false" batch-size="100">
+    <id name="Id" type="long" column="Id">
+      <generator class="native" />
+    </id>
+
+    <property   name="CriadoEm"           column="criadoem"           type="DateTime"   not-null="false"  />
+    <property   name="UltimaAlteracao"    column="UltimaAlteracao"    type="DateTime"   not-null="false"  />
+
+
+    <property name="Nome" column="Nome" type="string"  length="5000"  not-null="false" />
+    <property name="Responsavel" column="Responsavel" type="string"  length="5000"  not-null="false" />
+    <property name="EmailResponsavel" column="EmailResponsavel" type="string"  length="5000"  not-null="false" />
+    <property name="StatusProjeto" column="StatusProjeto" not-null="true" />
+    <property name="QtdTotalHoras" column="QtdTotalHoras" type="decimal"  not-null="true" />
+
+    <many-to-one name="Cliente" class="PortalOS.Domain.Entities.Cliente" column="ClienteId" not-null="false" index="idx_projeto_cliente" foreign-key="fk_projeto_cliente" />
+  </class>
+</hibernate-mapping>

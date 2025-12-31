@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<hibernate-mapping xmlns="urn:nhibernate-mapping-2.2"  assembly="PortalOS.Domain"  namespace="PortalOS.Domain.Entities">
+  <class name="Cliente" table="Cliente" lazy="false" batch-size="100">
+    <id name="Id" type="long" column="Id">
+      <generator class="native" />
+    </id>
+
+    <property   name="CriadoEm"           column="criadoem"           type="DateTime"   not-null="false"  />
+    <property   name="UltimaAlteracao"    column="UltimaAlteracao"    type="DateTime"   not-null="false"  />
+
+
+    <property name="RazaoSocial" column="RazaoSocial" type="string"  length="5000"  not-null="false" />
+    <property name="Cnpj" column="Cnpj" type="string"  length="5000"  not-null="false" />
+    <property name="Responsavel" column="Responsavel" type="string"  length="5000"  not-null="false" />
+    <property name="Telefone" column="Telefone" type="string"  length="5000"  not-null="false" />
+    <property name="EmailResponsavel" column="EmailResponsavel" type="string"  length="5000"  not-null="false" />
+    <property name="EmailFinanceiro" column="EmailFinanceiro" type="string"  length="5000"  not-null="false" />
+    <property name="Endereco" column="Endereco" type="string"  length="5000"  not-null="false" />
+    <property name="StatusCliente" column="StatusCliente" not-null="true" />
+    <property name="ClienteTotvs" column="ClienteTotvs" type="bool"  not-null="true" />
+  </class>
+</hibernate-mapping>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<hibernate-mapping xmlns="urn:nhibernate-mapping-2.2"  assembly="PortalOS.Domain"  namespace="PortalOS.Domain.Entities">
+  <class name="OrdemServico" table="OrdemServico" lazy="false" batch-size="100">
+    <id name="Id" type="long" column="Id">
+      <generator class="native" />
+    </id>
+
+    <property   name="CriadoEm"           column="criadoem"           type="DateTime"   not-null="false"  />
+    <property   name="UltimaAlteracao"    column="UltimaAlteracao"    type="DateTime"   not-null="false"  />
+
+
+    <property name="DataAgenda" column="DataAgenda" type="DateTime"  not-null="true" />
+    <property name="HoraInicio" column="HoraInicio" type="DateTime" not-null="true" />
+    <property name="InicioIntervalo" column="InicioIntervalo" type="DateTime" not-null="false" />
+    <property name="FimIntervalo" column="FimIntervalo" type="DateTime" not-null="false" />
+    <property name="HoraFim" column="HoraFim" type="DateTime" not-null="true" />
+    <property name="Descricao" column="Descricao" type="string"  length="5000"  not-null="false" />
+    <property name="Colaborador" column="Colaborador" type="string"  length="5000"  not-null="false" />
+
+    <many-to-one name="Projeto" class="PortalOS.Domain.Entities.Projeto" column="ProjetoId" not-null="false" index="idx_ordemservico_projeto" foreign-key="fk_ordemservico_projeto" />
+  </class>
+</hibernate-mapping>
