@@ -17,14 +17,14 @@ namespace PortalOS.API.Controllers
             _ordemServicoService = ordemServicoService;
         }
 
-        [RequirePermission("ordens-servico.read")]
+        [RequirePermission("ordens.servico.read")]
         [GetEndpoint]
         public IActionResult GetAll(ODataQueryOptions<OrdemServico> queryOptions)
         {
             return OData(queryOptions);
         }
 
-        [RequirePermission("ordens-servico.read")]
+        [RequirePermission("ordens.servico.read")]
         [GetEndpoint("{id}")]
         public IActionResult GetById(long id)
         {
@@ -36,7 +36,7 @@ namespace PortalOS.API.Controllers
             return Http200(OrdemServicoResponse.FromEntity(os));
         }
 
-        [RequirePermission("ordens-servico.read")]
+        [RequirePermission("ordens.servico.read")]
         [GetEndpoint("projeto/{projetoId}")]
         public IActionResult GetByProjeto(long projetoId)
         {
@@ -44,7 +44,7 @@ namespace PortalOS.API.Controllers
             return Http200(ordens.Select(OrdemServicoResponse.FromEntity));
         }
 
-        [RequirePermission("ordens-servico.read")]
+        [RequirePermission("ordens.servico.read")]
         [GetEndpoint("colaborador/{colaborador}")]
         public IActionResult GetByColaborador(string colaborador)
         {
@@ -52,7 +52,7 @@ namespace PortalOS.API.Controllers
             return Http200(ordens.Select(OrdemServicoResponse.FromEntity));
         }
 
-        [RequirePermission("ordens-servico.read")]
+        [RequirePermission("ordens.servico.read")]
         [GetEndpoint("mes/{ano}/{mes}")]
         public IActionResult GetByMesAno(int ano, int mes)
         {
@@ -60,7 +60,7 @@ namespace PortalOS.API.Controllers
             return Http200(ordens.Select(OrdemServicoResponse.FromEntity));
         }
 
-        [RequirePermission("ordens-servico.read")]
+        [RequirePermission("ordens.servico.read")]
         [GetEndpoint("total-horas/{ano}/{mes}")]
         public IActionResult GetTotalHorasMes(int ano, int mes)
         {
@@ -68,7 +68,7 @@ namespace PortalOS.API.Controllers
             return Http200(new { ano, mes, totalHoras });
         }
 
-        [RequirePermission("ordens-servico.read")]
+        [RequirePermission("ordens.servico.read")]
         [GetEndpoint("total-horas/{ano}/{mes}/{colaborador}")]
         public IActionResult GetTotalHorasMesPorColaborador(int ano, int mes, string colaborador)
         {
@@ -76,7 +76,7 @@ namespace PortalOS.API.Controllers
             return Http200(new { ano, mes, colaborador, totalHoras });
         }
 
-        [RequirePermission("ordens-servico.create")]
+        [RequirePermission("ordens.servico.create")]
         [PostEndpoint]
         public IActionResult Create([FromBody] CreateOrdemServicoRequest request)
         {
@@ -87,7 +87,7 @@ namespace PortalOS.API.Controllers
             });
         }
 
-        [RequirePermission("ordens-servico.update")]
+        [RequirePermission("ordens.servico.update")]
         [PutEndpoint("{id}")]
         public IActionResult Update(long id, [FromBody] UpdateOrdemServicoRequest request)
         {
@@ -98,7 +98,7 @@ namespace PortalOS.API.Controllers
             });
         }
 
-        [RequirePermission("ordens-servico.delete")]
+        [RequirePermission("ordens.servico.delete")]
         [DeleteEndpoint("{id}")]
         public IActionResult Delete(long id)
         {
