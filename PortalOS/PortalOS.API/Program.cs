@@ -1,5 +1,8 @@
+using dNET.API.Authentication;
 using dNET.IoC;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.OpenApi.Models;
+using PortalOS.Domain.Services;
 using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,9 +18,17 @@ builder.Services
         infrastructureAssembly,
         domainAssembly)
     .RunMigrations(builder.Configuration, "public", infrastructureAssembly)
-    .SeedTranslations(builder.Configuration, resourcesPath, infrastructureAssembly)
-    .AddI18n()
     .AddServicesFromAssembly(domainAssembly);
+
+builder.Services.AddScoped<DashboardService>();
+
+builder.Services.AddScoped<IdentityProviderClient>();
+builder.Services.AddScoped<DynamicJwtValidator>();
+
+builder.Services.AddAuthentication("DynamicJwtBearer")
+    .AddScheme<AuthenticationSchemeOptions, DynamicJwtBearerHandler>("DynamicJwtBearer", null);
+
+builder.Services.AddAuthorization();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -50,6 +61,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseCors();
 app.UseMultiTenant();
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

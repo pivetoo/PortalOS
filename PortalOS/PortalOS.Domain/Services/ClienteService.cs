@@ -1,7 +1,5 @@
-using dNET.Domain.Interfaces;
 using dNET.Domain.Repositories;
 using dNET.Domain.Services;
-using Microsoft.Extensions.Logging;
 using PortalOS.Domain.Entities;
 using PortalOS.Domain.ViewModels;
 
@@ -9,7 +7,7 @@ namespace PortalOS.Domain.Services
 {
     public class ClienteService : ServiceCrud<Cliente>
     {
-        public ClienteService(IUnitOfWork unitOfWork, ILogger<ServiceCrud<Cliente>> log, II18nService? i18nService = null) : base(unitOfWork, log, i18nService)
+        public ClienteService(IUnitOfWork unitOfWork) : base(unitOfWork)
         {
         }
 

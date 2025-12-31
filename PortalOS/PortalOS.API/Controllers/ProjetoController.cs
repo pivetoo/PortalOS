@@ -12,17 +12,19 @@ namespace PortalOS.API.Controllers
     {
         private readonly ProjetoService _projetoService;
 
-        public ProjetoController(ILogger<ProjetoController> logger, ProjetoService projetoService) : base(projetoService, logger)
+        public ProjetoController(ProjetoService projetoService) : base(projetoService)
         {
             _projetoService = projetoService;
         }
 
+        [RequirePermission("projetos.read")]
         [GetEndpoint]
         public IActionResult GetAll(ODataQueryOptions<Projeto> queryOptions)
         {
             return OData(queryOptions);
         }
 
+        [RequirePermission("projetos.read")]
         [GetEndpoint("{id}")]
         public IActionResult GetById(long id)
         {
@@ -34,6 +36,7 @@ namespace PortalOS.API.Controllers
             return Http200(ProjetoResponse.FromEntity(projeto));
         }
 
+        [RequirePermission("projetos.read")]
         [GetEndpoint("cliente/{clienteId}")]
         public IActionResult GetByCliente(long clienteId)
         {
@@ -41,6 +44,7 @@ namespace PortalOS.API.Controllers
             return Http200(projetos.Select(ProjetoResponse.FromEntity));
         }
 
+        [RequirePermission("projetos.read")]
         [GetEndpoint("ativos")]
         public IActionResult GetAtivos()
         {
@@ -48,6 +52,7 @@ namespace PortalOS.API.Controllers
             return Http200(projetos.Select(ProjetoResponse.FromEntity));
         }
 
+        [RequirePermission("projetos.create")]
         [PostEndpoint]
         public IActionResult Create([FromBody] CreateProjetoRequest request)
         {
@@ -58,6 +63,7 @@ namespace PortalOS.API.Controllers
             });
         }
 
+        [RequirePermission("projetos.update")]
         [PutEndpoint("{id}")]
         public IActionResult Update(long id, [FromBody] UpdateProjetoRequest request)
         {
@@ -68,6 +74,7 @@ namespace PortalOS.API.Controllers
             });
         }
 
+        [RequirePermission("projetos.delete")]
         [DeleteEndpoint("{id}")]
         public IActionResult Delete(long id)
         {

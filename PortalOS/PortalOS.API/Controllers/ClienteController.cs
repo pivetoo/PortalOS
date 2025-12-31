@@ -12,17 +12,19 @@ namespace PortalOS.API.Controllers
     {
         private readonly ClienteService _clienteService;
 
-        public ClienteController(ILogger<ClienteController> logger, ClienteService clienteService) : base(clienteService, logger)
+        public ClienteController(ClienteService clienteService) : base(clienteService)
         {
             _clienteService = clienteService;
         }
 
+        [RequirePermission("clientes.read")]
         [GetEndpoint]
         public IActionResult GetAll(ODataQueryOptions<Cliente> queryOptions)
         {
             return OData(queryOptions);
         }
 
+        [RequirePermission("clientes.read")]
         [GetEndpoint("{id}")]
         public IActionResult GetById(long id)
         {
@@ -34,6 +36,7 @@ namespace PortalOS.API.Controllers
             return Http200(ClienteResponse.FromEntity(cliente));
         }
 
+        [RequirePermission("clientes.read")]
         [GetEndpoint("ativos")]
         public IActionResult GetAtivos()
         {
@@ -41,6 +44,7 @@ namespace PortalOS.API.Controllers
             return Http200(clientes.Select(ClienteResponse.FromEntity));
         }
 
+        [RequirePermission("clientes.create")]
         [PostEndpoint]
         public IActionResult Create([FromBody] CreateClienteRequest request)
         {
@@ -51,6 +55,7 @@ namespace PortalOS.API.Controllers
             });
         }
 
+        [RequirePermission("clientes.update")]
         [PutEndpoint("{id}")]
         public IActionResult Update(long id, [FromBody] UpdateClienteRequest request)
         {
@@ -61,6 +66,7 @@ namespace PortalOS.API.Controllers
             });
         }
 
+        [RequirePermission("clientes.delete")]
         [DeleteEndpoint("{id}")]
         public IActionResult Delete(long id)
         {

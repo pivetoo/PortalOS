@@ -1,7 +1,5 @@
-using dNET.Domain.Interfaces;
 using dNET.Domain.Repositories;
 using dNET.Domain.Services;
-using Microsoft.Extensions.Logging;
 using PortalOS.Domain.Entities;
 using PortalOS.Domain.ViewModels;
 
@@ -11,7 +9,7 @@ namespace PortalOS.Domain.Services
     {
         private readonly ClienteService _clienteService;
 
-        public ProjetoService(IUnitOfWork unitOfWork, ILogger<ServiceCrud<Projeto>> log, ClienteService clienteService, II18nService? i18nService = null) : base(unitOfWork, log, i18nService)
+        public ProjetoService(IUnitOfWork unitOfWork, ClienteService clienteService) : base(unitOfWork)
         {
             _clienteService = clienteService;
         }
