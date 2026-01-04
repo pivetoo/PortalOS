@@ -2,6 +2,7 @@ using dNET.API.Authentication;
 using dNET.IoC;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.OpenApi.Models;
+using PortalOS.API.Middleware;
 using PortalOS.Domain.Services;
 using System.Reflection;
 
@@ -15,14 +16,13 @@ var resourcesPath = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..
 builder.Services
     .AddFrameworkNHibernate(
         builder.Configuration,
-        infrastructureAssembly,
-        domainAssembly)
+        infrastructureAssembly)
     .RunMigrations(builder.Configuration, "public", infrastructureAssembly)
     .AddServicesFromAssembly(domainAssembly);
 
 builder.Services.AddScoped<DashboardService>();
 
-builder.Services.AddScoped<IdentityProviderClient>();
+builder.Services.AddSingleton<IdentityProviderClient>();
 builder.Services.AddScoped<DynamicJwtValidator>();
 
 builder.Services.AddAuthentication("DynamicJwtBearer")
@@ -63,6 +63,7 @@ app.UseCors();
 app.UseMultiTenant();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseColaboradorSync();
 
 app.MapControllers();
 

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<hibernate-mapping xmlns="urn:nhibernate-mapping-2.2"  assembly="PortalOS.Domain"  namespace="PortalOS.Domain.Entities">
+  <class name="Tarefa" table="Tarefa" lazy="false" batch-size="100">
+    <id name="Id" type="long" column="Id">
+      <generator class="native" />
+    </id>
+
+    <property   name="CriadoEm"           column="criadoem"           type="DateTime"   not-null="false"  />
+    <property   name="UltimaAlteracao"    column="UltimaAlteracao"    type="DateTime"   not-null="false"  />
+
+    <property name="Nome" column="Nome" type="string"  length="200"  not-null="true" />
+    <property name="Descricao" column="Descricao" type="string"  length="5000"  not-null="false" />
+
+    <many-to-one name="Projeto" class="PortalOS.Domain.Entities.Projeto" column="ProjetoId" not-null="true" lazy="false" index="idx_tarefa_projeto" foreign-key="fk_tarefa_projeto" />
+  </class>
+</hibernate-mapping>

@@ -24,7 +24,7 @@ export const clienteService = {
 
   getAtivos: () => httpClient.get<Cliente[]>(`${BASE_URL}/ativos`),
 
-  create: (data: CreateClienteRequest) => httpClient.post<Cliente>(BASE_URL, data),
+  create: (data: CreateClienteRequest) => httpClient.post<Cliente>(`${BASE_URL}/Create`, data),
 
   update: (id: number, data: UpdateClienteRequest) => httpClient.put<Cliente>(`${BASE_URL}/${id}`, data),
 

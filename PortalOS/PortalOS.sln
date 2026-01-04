@@ -23,6 +23,27 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ORM", "ORM", "{340F937F-7CF
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dNET.ORM.NHibernate", "..\..\..\frameworks\dNET\dNET\dNET.ORM.NHibernate\dNET.ORM.NHibernate.csproj", "{AE5C4EF2-F2A0-B7D3-55DB-EAFBD49BF439}"
 EndProject
+Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "PortalOS.Web", "PortalOS.Web\", "{D8177EBF-72BC-9CDD-8C65-A5767DA3098A}"
+	ProjectSection(WebsiteProperties) = preProject
+		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.8"
+		Debug.AspNetCompiler.VirtualPath = "/localhost_49983"
+		Debug.AspNetCompiler.PhysicalPath = "PortalOS.Web\"
+		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_49983\"
+		Debug.AspNetCompiler.Updateable = "true"
+		Debug.AspNetCompiler.ForceOverwrite = "true"
+		Debug.AspNetCompiler.FixedNames = "false"
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.VirtualPath = "/localhost_49983"
+		Release.AspNetCompiler.PhysicalPath = "PortalOS.Web\"
+		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_49983\"
+		Release.AspNetCompiler.Updateable = "true"
+		Release.AspNetCompiler.ForceOverwrite = "true"
+		Release.AspNetCompiler.FixedNames = "false"
+		Release.AspNetCompiler.Debug = "False"
+		VWDPort = "49983"
+		SlnRelativePath = "PortalOS.Web\"
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -61,6 +82,10 @@ Global
 		{AE5C4EF2-F2A0-B7D3-55DB-EAFBD49BF439}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AE5C4EF2-F2A0-B7D3-55DB-EAFBD49BF439}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AE5C4EF2-F2A0-B7D3-55DB-EAFBD49BF439}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D8177EBF-72BC-9CDD-8C65-A5767DA3098A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D8177EBF-72BC-9CDD-8C65-A5767DA3098A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D8177EBF-72BC-9CDD-8C65-A5767DA3098A}.Release|Any CPU.ActiveCfg = Debug|Any CPU
+		{D8177EBF-72BC-9CDD-8C65-A5767DA3098A}.Release|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

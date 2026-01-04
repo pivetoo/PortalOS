@@ -1,5 +1,5 @@
 export interface HorasPorMesItem {
-  name: string;
+  mes: number;
   horas: number;
 }
 

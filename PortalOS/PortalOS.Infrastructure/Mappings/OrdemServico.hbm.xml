@@ -14,9 +14,9 @@
     <property name="InicioIntervalo" column="InicioIntervalo" type="DateTime" not-null="false" />
     <property name="FimIntervalo" column="FimIntervalo" type="DateTime" not-null="false" />
     <property name="HoraFim" column="HoraFim" type="DateTime" not-null="true" />
-    <property name="Descricao" column="Descricao" type="string"  length="5000"  not-null="false" />
-    <property name="Colaborador" column="Colaborador" type="string"  length="5000"  not-null="false" />
+    <property name="Descricao" column="Descricao" type="string" length="5000" not-null="false" />
 
-    <many-to-one name="Projeto" class="PortalOS.Domain.Entities.Projeto" column="ProjetoId" not-null="false" index="idx_ordemservico_projeto" foreign-key="fk_ordemservico_projeto" />
+    <many-to-one name="Tarefa" class="PortalOS.Domain.Entities.Tarefa" column="TarefaId" not-null="false" lazy="false" foreign-key="fk_ordemservico_tarefa" />
+    <many-to-one name="Colaborador" class="PortalOS.Domain.Entities.Colaborador" column="ColaboradorId" not-null="false" lazy="false" foreign-key="fk_ordemservico_colaborador" />
   </class>
 </hibernate-mapping>

@@ -31,7 +31,7 @@ export const projetoService = {
 
   getAtivos: () => httpClient.get<Projeto[]>(`${BASE_URL}/ativos`),
 
-  create: (data: CreateProjetoRequest) => httpClient.post<Projeto>(BASE_URL, data),
+  create: (data: CreateProjetoRequest) => httpClient.post<Projeto>(`${BASE_URL}/Create`, data),
 
   update: (id: number, data: UpdateProjetoRequest) => httpClient.put<Projeto>(`${BASE_URL}/${id}`, data),
 

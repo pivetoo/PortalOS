@@ -1,54 +1,32 @@
-import { useState } from 'react';
-import { Clock, Plus, Trash2 } from 'lucide-react';
-import {
-  PageLayout,
-  Card,
-  CardContent,
-  CardHeader,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-  Input,
-  Button
-} from 'd-rts';
+import { useState, useEffect, useMemo } from 'react';
+import { Clock, Plus, Pencil, Trash2 } from 'lucide-react';
+import { PageLayout, Card, CardContent, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Button, toast, useApi, Modal, ModalContent, ModalHeader, ModalTitle, ModalFooter, Input } from 'd-rts';
+import { ordemServicoService } from '../../services/ordemServicoService';
+import { clienteService } from '../../services/clienteService';
+import { projetoService } from '../../services/projetoService';
+import { tarefaService } from '../../services/tarefaService';
+import type { OrdemServico, CreateOrdemServicoRequest, UpdateOrdemServicoRequest } from '../../types/ordemServico';
+import type { Cliente } from '../../types/cliente';
+import type { Projeto } from '../../types/projeto';
+import type { Tarefa } from '../../types/tarefa';
 
-interface Apontamento {
-  id: number;
-  data: string;
-  cliente: string;
-  projeto: string;
-  tarefa: string;
+interface ApontamentoForm {
+  id: number | null;
+  tarefaId: number | null;
+  projetoId: number | null;
+  clienteId: number | null;
+  dataAgenda: string | null;
   horaInicio: string;
   horaFim: string;
-  totalDia: string;
+  inicioIntervalo: string;
+  fimIntervalo: string;
+  descricao: string;
 }
-
-const clientesMock = ['HVTECH Sistemas', 'Tech Solutions', 'Empresa ABC'];
-const projetosMock = ['Portal HVTECH', 'App Mobile', 'Sistema Interno', 'Manutencao'];
-
-const apontamentosIniciais: Apontamento[] = [
-  { id: 1, data: '02/12/2025', cliente: 'HVTECH Sistemas', projeto: 'Portal HVTECH', tarefa: 'Desenvolvimento', horaInicio: '08:00', horaFim: '17:00', totalDia: '08:00' },
-  { id: 2, data: '03/12/2025', cliente: 'HVTECH Sistemas', projeto: 'Portal HVTECH', tarefa: 'Testes', horaInicio: '08:00', horaFim: '16:30', totalDia: '07:30' },
-  { id: 3, data: '04/12/2025', cliente: 'Tech Solutions', projeto: 'App Mobile', tarefa: 'Integracao API', horaInicio: '08:00', horaFim: '17:00', totalDia: '08:00' },
-  { id: 4, data: '05/12/2025', cliente: 'HVTECH Sistemas', projeto: 'Sistema Interno', tarefa: 'Correcao de bugs', horaInicio: '09:00', horaFim: '16:00', totalDia: '06:00' },
-  { id: 5, data: '06/12/2025', cliente: 'Tech Solutions', projeto: 'App Mobile', tarefa: 'Deploy', horaInicio: '08:00', horaFim: '17:30', totalDia: '08:30' },
-  { id: 6, data: '', cliente: '', projeto: '', tarefa: '', horaInicio: '', horaFim: '', totalDia: '' },
-  { id: 7, data: '', cliente: '', projeto: '', tarefa: '', horaInicio: '', horaFim: '', totalDia: '' },
-  { id: 8, data: '', cliente: '', projeto: '', tarefa: '', horaInicio: '', horaFim: '', totalDia: '' },
-];
 
 const meses = [
   { value: '1', label: 'Janeiro' },
   { value: '2', label: 'Fevereiro' },
-  { value: '3', label: 'Marco' },
+  { value: '3', label: 'Março' },
   { value: '4', label: 'Abril' },
   { value: '5', label: 'Maio' },
   { value: '6', label: 'Junho' },
@@ -60,238 +38,549 @@ const meses = [
   { value: '12', label: 'Dezembro' },
 ];
 
+const diasSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+
+function formatDateToInput(dateString: string): string {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return date.toISOString().split('T')[0];
+}
+
+function formatTimeToInput(dateTimeString: string | null): string {
+  if (!dateTimeString) return '';
+  const date = new Date(dateTimeString);
+  return date.toTimeString().slice(0, 5);
+}
+
+function formatHorasDisplay(totalHoras: number): string {
+  const horas = Math.floor(totalHoras);
+  const minutos = Math.round((totalHoras - horas) * 60);
+  return `${horas.toString().padStart(2, '0')}:${minutos.toString().padStart(2, '0')}`;
+}
+
+function calcularTotalHoras(
+  horaInicio: string,
+  horaFim: string,
+  inicioIntervalo?: string,
+  fimIntervalo?: string
+): number {
+  if (!horaInicio || !horaFim) return 0;
+
+  const diffMinutos = (inicio: string, fim: string): number => {
+    const [inicioH, inicioM] = inicio.split(':').map(Number);
+    const [fimH, fimM] = fim.split(':').map(Number);
+    return (fimH * 60 + fimM) - (inicioH * 60 + inicioM);
+  };
+
+  const expediente = diffMinutos(horaInicio, horaFim);
+  const intervalo = (inicioIntervalo && fimIntervalo)
+    ? diffMinutos(inicioIntervalo, fimIntervalo)
+    : 0;
+
+  const total = expediente - intervalo;
+  return total > 0 ? total / 60 : 0;
+}
+
+function emptyForm(): ApontamentoForm {
+  return {
+    id: null,
+    tarefaId: null,
+    projetoId: null,
+    clienteId: null,
+    dataAgenda: null,
+    horaInicio: '08:00',
+    horaFim: '17:00',
+    inicioIntervalo: '12:00',
+    fimIntervalo: '13:00',
+    descricao: ''
+  };
+}
+
 export default function Apontamentos() {
   const anoAtual = new Date().getFullYear();
   const mesAtual = (new Date().getMonth() + 1).toString();
 
-  const [apontamentos, setApontamentos] = useState<Apontamento[]>(apontamentosIniciais);
+  const [apontamentos, setApontamentos] = useState<OrdemServico[]>([]);
   const [ano, setAno] = useState(anoAtual.toString());
   const [mes, setMes] = useState(mesAtual);
+  const [clientes, setClientes] = useState<Cliente[]>([]);
+  const [projetos, setProjetos] = useState<Projeto[]>([]);
+  const [tarefas, setTarefas] = useState<Tarefa[]>([]);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [form, setForm] = useState<ApontamentoForm>(emptyForm());
 
   const anos = Array.from({ length: 5 }, (_, i) => (anoAtual - 2 + i).toString());
 
-  const calcularTotalHoras = () => {
-    let totalMinutos = 0;
-    apontamentos.forEach(ap => {
-      if (ap.totalDia) {
-        const [horas, minutos] = ap.totalDia.split(':').map(Number);
-        totalMinutos += horas * 60 + minutos;
-      }
+  const { execute: loadOrdens, loading: loadingOrdens } = useApi();
+  const { execute: loadClientes } = useApi();
+  const { execute: loadProjetos } = useApi();
+  const { execute: loadTarefas } = useApi();
+  const { execute: saveApontamento, loading: saving } = useApi();
+  const { execute: deleteApontamento } = useApi();
+
+  const totalMes = useMemo(() => {
+    return apontamentos.reduce((acc, ap) => acc + ap.totalHoras, 0);
+  }, [apontamentos]);
+
+  useEffect(() => {
+    loadClientes(() => clienteService.getAtivos()).then((data) => {
+      if (data) setClientes(data);
     });
-    const horas = Math.floor(totalMinutos / 60);
-    const minutos = totalMinutos % 60;
-    return `${horas.toString().padStart(2, '0')}:${minutos.toString().padStart(2, '0')}`;
+    loadProjetos(() => projetoService.getAtivos()).then((data) => {
+      if (data) setProjetos(data);
+    });
+  }, []);
+
+  useEffect(() => {
+    loadOrdens(() => ordemServicoService.getByMesAno(parseInt(ano), parseInt(mes))).then((data) => {
+      if (data) setApontamentos(data);
+    });
+  }, [ano, mes]);
+
+  const getProjetosByCliente = (clienteId: number | null) => {
+    if (!clienteId) return projetos;
+    return projetos.filter((p) => p.clienteId === clienteId);
   };
 
-  const calcularTotalDia = (horaInicio: string, horaFim: string): string => {
-    if (!horaInicio || !horaFim) return '';
-    const [inicioH, inicioM] = horaInicio.split(':').map(Number);
-    const [fimH, fimM] = horaFim.split(':').map(Number);
-    const inicioMinutos = inicioH * 60 + inicioM;
-    const fimMinutos = fimH * 60 + fimM;
-    const diffMinutos = fimMinutos - inicioMinutos - 60;
-    if (diffMinutos <= 0) return '';
-    const horas = Math.floor(diffMinutos / 60);
-    const minutos = diffMinutos % 60;
-    return `${horas.toString().padStart(2, '0')}:${minutos.toString().padStart(2, '0')}`;
+  const getTarefasByProjeto = (projetoId: number | null) => {
+    if (!projetoId) return [];
+    return tarefas.filter((t) => t.projetoId === projetoId);
   };
 
-  const handleCellChange = (id: number, field: keyof Apontamento, value: string) => {
-    setApontamentos(prev => prev.map(ap => {
-      if (ap.id === id) {
-        const updated = { ...ap, [field]: value };
-        if (field === 'horaInicio' || field === 'horaFim') {
-          updated.totalDia = calcularTotalDia(
-            field === 'horaInicio' ? value : ap.horaInicio,
-            field === 'horaFim' ? value : ap.horaFim
-          );
-        }
-        return updated;
+  const getClienteFromProjeto = (projetoId: number | null): number | null => {
+    if (!projetoId) return null;
+    const projeto = projetos.find((p) => p.id === projetoId);
+    return projeto?.clienteId ?? null;
+  };
+
+  const loadTarefasByProjeto = async (projetoId: number) => {
+    const data = await loadTarefas(() => tarefaService.getByProjeto(projetoId));
+    if (data) setTarefas(data);
+  };
+
+  const openNewModal = () => {
+    setForm(emptyForm());
+    setModalOpen(true);
+  };
+
+  const openEditModal = async (ap: OrdemServico) => {
+    if (ap.projetoId) {
+      await loadTarefasByProjeto(ap.projetoId);
+    }
+    setForm({
+      id: ap.id,
+      tarefaId: ap.tarefaId,
+      projetoId: ap.projetoId,
+      clienteId: ap.clienteId,
+      dataAgenda: formatDateToInput(ap.dataAgenda),
+      horaInicio: formatTimeToInput(ap.horaInicio),
+      horaFim: formatTimeToInput(ap.horaFim),
+      inicioIntervalo: formatTimeToInput(ap.inicioIntervalo),
+      fimIntervalo: formatTimeToInput(ap.fimIntervalo),
+      descricao: ap.descricao || ''
+    });
+    setModalOpen(true);
+  };
+
+  const handleFormChange = (field: keyof ApontamentoForm, value: string | number | null) => {
+    setForm((prev) => {
+      const updated = { ...prev, [field]: value };
+
+      if (field === 'projetoId' && value) {
+        updated.clienteId = getClienteFromProjeto(value as number);
+        updated.tarefaId = null;
+        loadTarefasByProjeto(value as number);
       }
-      return ap;
-    }));
+
+      if (field === 'clienteId') {
+        const projetosCliente = getProjetosByCliente(value as number);
+        if (!projetosCliente.find((p) => p.id === prev.projetoId)) {
+          updated.projetoId = null;
+          updated.tarefaId = null;
+          setTarefas([]);
+        }
+      }
+
+      return updated;
+    });
   };
 
-  const adicionarLinha = () => {
-    const novoId = Math.max(...apontamentos.map(a => a.id)) + 1;
-    setApontamentos(prev => [...prev, {
-      id: novoId,
-      data: '',
-      cliente: '',
-      projeto: '',
-      tarefa: '',
-      horaInicio: '',
-      horaFim: '',
-      totalDia: ''
-    }]);
+  const canSave = (): boolean => {
+    return !!form.tarefaId && !!form.horaInicio && !!form.horaFim;
   };
 
-  const removerLinha = (id: number) => {
-    setApontamentos(prev => prev.filter(ap => ap.id !== id));
+  const handleSave = async () => {
+    if (!canSave()) {
+      toast({ title: 'Preencha todos os campos obrigatórios', variant: 'destructive' });
+      return;
+    }
+
+    const baseDate = form.dataAgenda || new Date().toISOString().split('T')[0];
+    const horaInicio = new Date(baseDate + 'T' + form.horaInicio + ':00').toISOString();
+    const horaFim = new Date(baseDate + 'T' + form.horaFim + ':00').toISOString();
+    const inicioIntervalo = form.inicioIntervalo
+      ? new Date(baseDate + 'T' + form.inicioIntervalo + ':00').toISOString()
+      : null;
+    const fimIntervalo = form.fimIntervalo
+      ? new Date(baseDate + 'T' + form.fimIntervalo + ':00').toISOString()
+      : null;
+
+    if (form.id === null) {
+      const request: CreateOrdemServicoRequest = {
+        tarefaId: form.tarefaId!,
+        horaInicio,
+        horaFim,
+        inicioIntervalo,
+        fimIntervalo,
+        descricao: form.descricao
+      };
+
+      const novaOrdem = await saveApontamento(() => ordemServicoService.create(request));
+      if (novaOrdem) {
+        setApontamentos((prev) => [...prev, novaOrdem]);
+        setModalOpen(false);
+        toast({ title: 'Apontamento criado com sucesso' });
+      }
+    } else {
+      const request: UpdateOrdemServicoRequest = {
+        id: form.id,
+        tarefaId: form.tarefaId!,
+        dataAgenda: new Date(baseDate + 'T00:00:00').toISOString(),
+        horaInicio,
+        horaFim,
+        inicioIntervalo,
+        fimIntervalo,
+        descricao: form.descricao
+      };
+
+      const ordemAtualizada = await saveApontamento(() => ordemServicoService.update(form.id!, request));
+      if (ordemAtualizada) {
+        setApontamentos((prev) => prev.map((ap) => (ap.id === form.id ? ordemAtualizada : ap)));
+        setModalOpen(false);
+        toast({ title: 'Apontamento atualizado com sucesso' });
+      }
+    }
   };
+
+  const handleDelete = async (ap: OrdemServico) => {
+    await deleteApontamento(() => ordemServicoService.delete(ap.id));
+    setApontamentos((prev) => prev.filter((a) => a.id !== ap.id));
+    toast({ title: 'Apontamento removido com sucesso' });
+  };
+
+  const formTotalHoras = calcularTotalHoras(
+    form.horaInicio,
+    form.horaFim,
+    form.inicioIntervalo,
+    form.fimIntervalo
+  );
 
   return (
-    <PageLayout
-      title="Apontamento de OS"
-      icon={<Clock size={24} />}
-    >
+    <PageLayout title="Apontamentos" icon={<Clock size={24} />}>
       <div className="space-y-4">
         <Card>
-        <CardContent className="pt-4">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <Select value={ano} onValueChange={setAno}>
-                <SelectTrigger className="w-[120px]">
-                  <SelectValue placeholder="Ano" />
-                </SelectTrigger>
-                <SelectContent>
-                  {anos.map(a => (
-                    <SelectItem key={a} value={a}>{a}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          <CardContent className="pt-4">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <Select value={ano} onValueChange={setAno}>
+                  <SelectTrigger className="w-[100px]">
+                    <SelectValue placeholder="Ano" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {anos.map((a) => (
+                      <SelectItem key={a} value={a}>{a}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
 
-              <Select value={mes} onValueChange={setMes}>
-                <SelectTrigger className="w-[150px]">
-                  <SelectValue placeholder="Mes" />
-                </SelectTrigger>
-                <SelectContent>
-                  {meses.map(m => (
-                    <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                <Select value={mes} onValueChange={setMes}>
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue placeholder="Mês" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {meses.map((m) => (
+                      <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <Button onClick={() => openNewModal()} className="gap-2">
+                  <Plus size={16} />
+                  Novo Apontamento
+                </Button>
+              </div>
+
+              <div className="flex items-center gap-2 text-lg font-semibold">
+                <Clock size={20} className="text-muted-foreground" />
+                <span>Total:</span>
+                <span className="text-primary">{formatHorasDisplay(totalMes)}</span>
+              </div>
             </div>
+          </CardContent>
+        </Card>
 
-            <div className="flex items-center gap-2 text-lg font-semibold">
-              <Clock size={20} className="text-muted-foreground" />
-              <span>Total de Horas:</span>
-              <span className="text-primary">{calcularTotalHoras()}</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+        <div className="border rounded-lg overflow-hidden bg-background">
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-sm">
+              <thead>
+                <tr className="bg-muted/50">
+                  <th className="border-b border-r px-3 py-2 text-left font-semibold w-[100px]">Data</th>
+                  <th className="border-b border-r px-3 py-2 text-left font-semibold w-[60px]">Dia</th>
+                  <th className="border-b border-r px-3 py-2 text-left font-semibold min-w-[150px]">Cliente</th>
+                  <th className="border-b border-r px-3 py-2 text-left font-semibold min-w-[150px]">Projeto</th>
+                  <th className="border-b border-r px-3 py-2 text-left font-semibold min-w-[150px]">Tarefa</th>
+                  <th className="border-b border-r px-3 py-2 text-center font-semibold w-[70px]">Entrada</th>
+                  <th className="border-b border-r px-3 py-2 text-center font-semibold w-[100px]">Intervalo</th>
+                  <th className="border-b border-r px-3 py-2 text-center font-semibold w-[70px]">Saída</th>
+                  <th className="border-b border-r px-3 py-2 text-center font-semibold w-[70px]">Total</th>
+                  <th className="border-b border-r px-3 py-2 text-left font-semibold min-w-[200px]">Descrição</th>
+                  <th className="border-b px-3 py-2 text-center font-semibold w-[80px]">Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loadingOrdens && (
+                  <tr>
+                    <td colSpan={11} className="px-3 py-8 text-center text-muted-foreground">
+                      Carregando apontamentos...
+                    </td>
+                  </tr>
+                )}
 
-      <Card>
-        <CardHeader>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={adicionarLinha}
-            className="rounded-full w-8 h-8"
-          >
-            <Plus size={16} />
-          </Button>
-        </CardHeader>
-        <CardContent>
-          <div className="border rounded-md">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[60px]">Ação</TableHead>
-                  <TableHead className="w-[120px]">Data</TableHead>
-                  <TableHead className="w-[180px]">Cliente</TableHead>
-                  <TableHead className="w-[180px]">Projeto</TableHead>
-                  <TableHead>Tarefa</TableHead>
-                  <TableHead className="w-[100px]">Inicio</TableHead>
-                  <TableHead className="w-[100px]">Fim</TableHead>
-                  <TableHead className="w-[100px]">Total</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {apontamentos.map((ap) => (
-                  <TableRow key={ap.id}>
-                    <TableCell className="p-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => removerLinha(ap.id)}
-                        className="h-8 w-8 text-destructive hover:text-destructive"
-                      >
-                        <Trash2 size={16} />
-                      </Button>
-                    </TableCell>
-                    <TableCell className="p-1">
-                      <Input
-                        type="date"
-                        value={ap.data ? ap.data.split('/').reverse().join('-') : ''}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          const formatted = val ? val.split('-').reverse().join('/') : '';
-                          handleCellChange(ap.id, 'data', formatted);
-                        }}
-                        className="h-8 text-sm"
-                      />
-                    </TableCell>
-                    <TableCell className="p-1">
-                      <Select
-                        value={ap.cliente}
-                        onValueChange={(value) => handleCellChange(ap.id, 'cliente', value)}
-                      >
-                        <SelectTrigger className="h-8 text-sm">
-                          <SelectValue placeholder="Selecione" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {clientesMock.map(c => (
-                            <SelectItem key={c} value={c}>{c}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-                    <TableCell className="p-1">
-                      <Select
-                        value={ap.projeto}
-                        onValueChange={(value) => handleCellChange(ap.id, 'projeto', value)}
-                      >
-                        <SelectTrigger className="h-8 text-sm">
-                          <SelectValue placeholder="Selecione" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {projetosMock.map(p => (
-                            <SelectItem key={p} value={p}>{p}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-                    <TableCell className="p-1">
-                      <Input
-                        value={ap.tarefa}
-                        onChange={(e) => handleCellChange(ap.id, 'tarefa', e.target.value)}
-                        placeholder="Descricao da tarefa"
-                        className="h-8 text-sm"
-                      />
-                    </TableCell>
-                    <TableCell className="p-1">
-                      <Input
-                        type="time"
-                        value={ap.horaInicio}
-                        onChange={(e) => handleCellChange(ap.id, 'horaInicio', e.target.value)}
-                        className="h-8 text-sm"
-                      />
-                    </TableCell>
-                    <TableCell className="p-1">
-                      <Input
-                        type="time"
-                        value={ap.horaFim}
-                        onChange={(e) => handleCellChange(ap.id, 'horaFim', e.target.value)}
-                        className="h-8 text-sm"
-                      />
-                    </TableCell>
-                    <TableCell className="p-1">
-                      <Input
-                        value={ap.totalDia}
-                        readOnly
-                        className="h-8 text-sm bg-muted font-medium text-center"
-                      />
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                {!loadingOrdens && apontamentos.length === 0 && (
+                  <tr>
+                    <td colSpan={11} className="px-3 py-8 text-center text-muted-foreground">
+                      Nenhum apontamento encontrado para este período
+                    </td>
+                  </tr>
+                )}
+
+                {!loadingOrdens &&
+                  [...apontamentos]
+                    .sort((a, b) => {
+                      const dateCompare = formatDateToInput(a.dataAgenda).localeCompare(formatDateToInput(b.dataAgenda));
+                      if (dateCompare !== 0) return dateCompare;
+                      return (a.horaInicio || '').localeCompare(b.horaInicio || '');
+                    })
+                    .map((ap, index, arr) => {
+                      const dataKey = formatDateToInput(ap.dataAgenda);
+                      const date = new Date(ap.dataAgenda);
+                      const dayOfWeek = diasSemana[date.getDay()];
+                      const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+                      const isToday = dataKey === new Date().toISOString().split('T')[0];
+
+                      const prevDataKey = index > 0 ? formatDateToInput(arr[index - 1].dataAgenda) : null;
+                      const isFirstOfDay = prevDataKey !== dataKey;
+                      const isLastOfDay = index === arr.length - 1 || formatDateToInput(arr[index + 1].dataAgenda) !== dataKey;
+
+                      return (
+                        <tr
+                          key={ap.id}
+                          className={`
+                            ${isWeekend ? 'bg-muted/30' : 'hover:bg-muted/20'}
+                            ${isToday ? 'bg-primary/5' : ''}
+                            ${isLastOfDay ? 'border-b-2 border-b-border' : ''}
+                          `}
+                        >
+                          <td className={`border-r px-3 py-2 font-medium ${!isFirstOfDay ? 'border-t border-t-muted' : 'border-t'}`}>
+                            {isFirstOfDay ? (
+                              <button
+                                onClick={() => openNewModal()}
+                                className="hover:text-primary transition-colors text-left"
+                                title="Adicionar apontamento neste dia"
+                              >
+                                {date.getDate().toString().padStart(2, '0')}/{(date.getMonth() + 1).toString().padStart(2, '0')}
+                              </button>
+                            ) : null}
+                          </td>
+                          <td className={`border-r px-3 py-2 text-muted-foreground ${!isFirstOfDay ? 'border-t border-t-muted' : 'border-t'}`}>
+                            {isFirstOfDay ? dayOfWeek : null}
+                          </td>
+                          <td className={`border-r px-3 py-2 ${!isFirstOfDay ? 'border-t border-t-muted' : 'border-t'}`}>
+                            {ap.clienteNome}
+                          </td>
+                          <td className={`border-r px-3 py-2 ${!isFirstOfDay ? 'border-t border-t-muted' : 'border-t'}`}>
+                            {ap.projetoNome}
+                          </td>
+                          <td className={`border-r px-3 py-2 ${!isFirstOfDay ? 'border-t border-t-muted' : 'border-t'}`}>
+                            {ap.tarefaNome}
+                          </td>
+                          <td className={`border-r px-3 py-2 text-center font-mono ${!isFirstOfDay ? 'border-t border-t-muted' : 'border-t'}`}>
+                            {formatTimeToInput(ap.horaInicio)}
+                          </td>
+                          <td className={`border-r px-3 py-2 text-center text-muted-foreground font-mono text-xs ${!isFirstOfDay ? 'border-t border-t-muted' : 'border-t'}`}>
+                            {ap.inicioIntervalo && ap.fimIntervalo
+                              ? `${formatTimeToInput(ap.inicioIntervalo)}-${formatTimeToInput(ap.fimIntervalo)}`
+                              : '-'}
+                          </td>
+                          <td className={`border-r px-3 py-2 text-center font-mono ${!isFirstOfDay ? 'border-t border-t-muted' : 'border-t'}`}>
+                            {formatTimeToInput(ap.horaFim)}
+                          </td>
+                          <td className={`border-r px-3 py-2 text-center font-mono font-semibold text-primary ${!isFirstOfDay ? 'border-t border-t-muted' : 'border-t'}`}>
+                            {formatHorasDisplay(ap.totalHoras)}
+                          </td>
+                          <td className={`border-r px-3 py-2 text-muted-foreground truncate max-w-[300px] ${!isFirstOfDay ? 'border-t border-t-muted' : 'border-t'}`} title={ap.descricao || ''}>
+                            {ap.descricao || '-'}
+                          </td>
+                          <td className={`px-2 py-1 ${!isFirstOfDay ? 'border-t border-t-muted' : 'border-t'}`}>
+                            <div className="flex items-center justify-center gap-1">
+                              <button
+                                onClick={() => openEditModal(ap)}
+                                className="p-1.5 rounded hover:bg-muted transition-colors"
+                                title="Editar"
+                              >
+                                <Pencil size={14} />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(ap)}
+                                className="p-1.5 rounded hover:bg-destructive/10 text-destructive transition-colors"
+                                title="Excluir"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+              </tbody>
+            </table>
           </div>
-        </CardContent>
-      </Card>
+        </div>
       </div>
+
+      <Modal open={modalOpen} onOpenChange={setModalOpen}>
+        <ModalContent size="3xl">
+          <ModalHeader>
+            <ModalTitle>
+              {form.id ? 'Editar Apontamento' : 'Novo Apontamento'}
+            </ModalTitle>
+          </ModalHeader>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' }} className="py-4">
+            <div style={{ gridColumn: 'span 2' }} className="space-y-2">
+              <label htmlFor="cliente" className="text-sm font-medium">Cliente</label>
+              <Select
+                value={form.clienteId?.toString() || ''}
+                onValueChange={(value) => handleFormChange('clienteId', value ? parseInt(value) : null)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione" />
+                </SelectTrigger>
+                <SelectContent>
+                  {clientes.map((c) => (
+                    <SelectItem key={c.id} value={c.id.toString()}>{c.razaoSocial}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div style={{ gridColumn: 'span 2' }} className="space-y-2">
+              <label htmlFor="projeto" className="text-sm font-medium">Projeto</label>
+              <Select
+                value={form.projetoId?.toString() || ''}
+                onValueChange={(value) => handleFormChange('projetoId', value ? parseInt(value) : null)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o projeto" />
+                </SelectTrigger>
+                <SelectContent>
+                  {getProjetosByCliente(form.clienteId).map((p) => (
+                    <SelectItem key={p.id} value={p.id.toString()}>{p.nome}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div style={{ gridColumn: 'span 4' }} className="space-y-2">
+              <label htmlFor="tarefa" className="text-sm font-medium">Tarefa</label>
+              <Select
+                value={form.tarefaId?.toString() || ''}
+                onValueChange={(value) => handleFormChange('tarefaId', value ? parseInt(value) : null)}
+                disabled={!form.projetoId}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={form.projetoId ? "Selecione a tarefa" : "Selecione um projeto primeiro"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {getTarefasByProjeto(form.projetoId).map((t) => (
+                    <SelectItem key={t.id} value={t.id.toString()}>{t.nome}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="horaInicio" className="text-sm font-medium">Entrada</label>
+              <Input
+                id="horaInicio"
+                type="time"
+                value={form.horaInicio}
+                onChange={(e) => handleFormChange('horaInicio', e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="inicioIntervalo" className="text-sm font-medium">Início Intervalo</label>
+              <Input
+                id="inicioIntervalo"
+                type="time"
+                value={form.inicioIntervalo}
+                onChange={(e) => handleFormChange('inicioIntervalo', e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="fimIntervalo" className="text-sm font-medium">Fim Intervalo</label>
+              <Input
+                id="fimIntervalo"
+                type="time"
+                value={form.fimIntervalo}
+                onChange={(e) => handleFormChange('fimIntervalo', e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="horaFim" className="text-sm font-medium">Saída</label>
+              <Input
+                id="horaFim"
+                type="time"
+                value={form.horaFim}
+                onChange={(e) => handleFormChange('horaFim', e.target.value)}
+              />
+            </div>
+
+            <div style={{ gridColumn: 'span 3' }} className="space-y-2">
+              <label htmlFor="descricao" className="text-sm font-medium">Descrição</label>
+              <textarea
+                id="descricao"
+                value={form.descricao}
+                onChange={(e) => handleFormChange('descricao', e.target.value)}
+                placeholder="Descreva as atividades realizadas..."
+                rows={2}
+                className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+              />
+            </div>
+
+            <div className="flex flex-col justify-end">
+              <div className="p-3 bg-muted rounded-lg text-center">
+                <span className="text-xs text-muted-foreground">Total</span>
+                <div className="text-lg font-bold text-primary">
+                  {formatHorasDisplay(formTotalHoras)}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <ModalFooter>
+            <Button variant="outline" onClick={() => setModalOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSave} disabled={saving || !canSave()}>
+              {saving ? 'Salvando...' : 'Salvar'}
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </PageLayout>
   );
 }

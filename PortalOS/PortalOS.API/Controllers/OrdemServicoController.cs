@@ -11,10 +11,12 @@ namespace PortalOS.API.Controllers
     public class OrdemServicoController : ApiControllerQuery<OrdemServico>
     {
         private readonly OrdemServicoService _ordemServicoService;
+        private readonly ColaboradorService _colaboradorService;
 
-        public OrdemServicoController(OrdemServicoService ordemServicoService) : base(ordemServicoService)
+        public OrdemServicoController(OrdemServicoService ordemServicoService, ColaboradorService colaboradorService) : base(ordemServicoService)
         {
             _ordemServicoService = ordemServicoService;
+            _colaboradorService = colaboradorService;
         }
 
         [RequirePermission("ordens.servico.read")]
@@ -37,18 +39,18 @@ namespace PortalOS.API.Controllers
         }
 
         [RequirePermission("ordens.servico.read")]
-        [GetEndpoint("projeto/{projetoId}")]
-        public IActionResult GetByProjeto(long projetoId)
+        [GetEndpoint("tarefa/{tarefaId}")]
+        public IActionResult GetByTarefa(long tarefaId)
         {
-            var ordens = _ordemServicoService.GetByProjeto(projetoId);
+            var ordens = _ordemServicoService.GetByTarefa(tarefaId);
             return Http200(ordens.Select(OrdemServicoResponse.FromEntity));
         }
 
         [RequirePermission("ordens.servico.read")]
-        [GetEndpoint("colaborador/{colaborador}")]
-        public IActionResult GetByColaborador(string colaborador)
+        [GetEndpoint("colaborador/{colaboradorId}")]
+        public IActionResult GetByColaborador(long colaboradorId)
         {
-            var ordens = _ordemServicoService.GetByColaborador(colaborador);
+            var ordens = _ordemServicoService.GetByColaborador(colaboradorId);
             return Http200(ordens.Select(OrdemServicoResponse.FromEntity));
         }
 
@@ -69,11 +71,11 @@ namespace PortalOS.API.Controllers
         }
 
         [RequirePermission("ordens.servico.read")]
-        [GetEndpoint("total-horas/{ano}/{mes}/{colaborador}")]
-        public IActionResult GetTotalHorasMesPorColaborador(int ano, int mes, string colaborador)
+        [GetEndpoint("total-horas/{ano}/{mes}/{colaboradorId}")]
+        public IActionResult GetTotalHorasMesPorColaborador(int ano, int mes, long colaboradorId)
         {
-            var totalHoras = _ordemServicoService.GetTotalHorasMesPorColaborador(mes, ano, colaborador);
-            return Http200(new { ano, mes, colaborador, totalHoras });
+            var totalHoras = _ordemServicoService.GetTotalHorasMesPorColaborador(mes, ano, colaboradorId);
+            return Http200(new { ano, mes, colaboradorId, totalHoras });
         }
 
         [RequirePermission("ordens.servico.create")]
@@ -82,7 +84,13 @@ namespace PortalOS.API.Controllers
         {
             return TryExecute(request, () =>
             {
-                var os = _ordemServicoService.Create(request);
+                var colaborador = _colaboradorService.GetByUsuarioIdp(CurrentUserId!.Value);
+                if (colaborador == null)
+                {
+                    return Http404("Colaborador nao encontrado");
+                }
+
+                var os = _ordemServicoService.Create(request, colaborador.Id);
                 return Http201(OrdemServicoResponse.FromEntity(os));
             });
         }

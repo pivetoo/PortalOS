@@ -7,25 +7,34 @@ namespace PortalOS.Domain.Services
 {
     public class OrdemServicoService : ServiceCrud<OrdemServico>
     {
-        private readonly ProjetoService _projetoService;
+        private readonly TarefaService _tarefaService;
+        private readonly ColaboradorService _colaboradorService;
 
-        public OrdemServicoService(IUnitOfWork unitOfWork, ProjetoService projetoService) : base(unitOfWork)
+        public OrdemServicoService(IUnitOfWork unitOfWork, TarefaService tarefaService, ColaboradorService colaboradorService) : base(unitOfWork)
         {
-            _projetoService = projetoService;
+            _tarefaService = tarefaService;
+            _colaboradorService = colaboradorService;
         }
 
-        public OrdemServico Create(CreateOrdemServicoRequest request)
+        public OrdemServico Create(CreateOrdemServicoRequest request, long colaboradorId)
         {
-            var projeto = _projetoService.GetById(request.ProjetoId);
-            if (projeto == null)
+            var tarefa = _tarefaService.GetById(request.TarefaId);
+            if (tarefa == null)
             {
-                ThrowError("Projeto nao encontrado");
+                ThrowError("Tarefa nao encontrada");
+            }
+
+            var colaborador = _colaboradorService.GetById(colaboradorId);
+            if (colaborador == null)
+            {
+                ThrowError("Colaborador nao encontrado");
             }
 
             var os = new OrdemServico
             {
-                Projeto = projeto,
-                DataAgenda = request.DataAgenda,
+                Tarefa = tarefa,
+                Colaborador = colaborador,
+                DataAgenda = DateTime.Now,
                 HoraInicio = request.HoraInicio,
                 InicioIntervalo = request.InicioIntervalo,
                 FimIntervalo = request.FimIntervalo,
@@ -50,13 +59,13 @@ namespace PortalOS.Domain.Services
                 ThrowError("Ordem de Servico nao encontrada");
             }
 
-            var projeto = _projetoService.GetById(request.ProjetoId);
-            if (projeto == null)
+            var tarefa = _tarefaService.GetById(request.TarefaId);
+            if (tarefa == null)
             {
-                ThrowError("Projeto nao encontrado");
+                ThrowError("Tarefa nao encontrada");
             }
 
-            os.Projeto = projeto;
+            os.Tarefa = tarefa;
             os.DataAgenda = request.DataAgenda;
             os.HoraInicio = request.HoraInicio;
             os.InicioIntervalo = request.InicioIntervalo;
@@ -68,14 +77,14 @@ namespace PortalOS.Domain.Services
             return os;
         }
 
-        public IEnumerable<OrdemServico> GetByProjeto(long projetoId)
+        public IEnumerable<OrdemServico> GetByTarefa(long tarefaId)
         {
-            return Query(os => os.Projeto.Id == projetoId);
+            return Query(os => os.Tarefa.Id == tarefaId);
         }
 
-        public IEnumerable<OrdemServico> GetByColaborador(string colaborador)
+        public IEnumerable<OrdemServico> GetByColaborador(long colaboradorId)
         {
-            return Query(os => os.Colaborador == colaborador);
+            return Query(os => os.Colaborador.Id == colaboradorId);
         }
 
         public IEnumerable<OrdemServico> GetByPeriodo(DateTime dataInicio, DateTime dataFim)
@@ -85,19 +94,21 @@ namespace PortalOS.Domain.Services
 
         public IEnumerable<OrdemServico> GetByMesAno(int mes, int ano)
         {
-            return Query(os => os.DataAgenda.Month == mes && os.DataAgenda.Year == ano);
+            var inicio = new DateTime(ano, mes, 1);
+            var fim = inicio.AddMonths(1).AddDays(-1);
+            return Query(os => os.DataAgenda >= inicio && os.DataAgenda <= fim);
         }
 
         public decimal GetTotalHorasMes(int mes, int ano)
         {
-            var query = Query(os => os.DataAgenda.Month == mes && os.DataAgenda.Year == ano);
-            return query.Sum(os => CalcularHorasTrabalhadas(os));
+            var ordens = GetByMesAno(mes, ano);
+            return ordens.Sum(os => CalcularHorasTrabalhadas(os));
         }
 
-        public decimal GetTotalHorasMesPorColaborador(int mes, int ano, string colaborador)
+        public decimal GetTotalHorasMesPorColaborador(int mes, int ano, long colaboradorId)
         {
-            var query = Query(os => os.DataAgenda.Month == mes && os.DataAgenda.Year == ano && os.Colaborador == colaborador);
-            return query.Sum(os => CalcularHorasTrabalhadas(os));
+            var ordens = GetByMesAno(mes, ano).Where(os => os.Colaborador?.Id == colaboradorId);
+            return ordens.Sum(os => CalcularHorasTrabalhadas(os));
         }
 
         private decimal CalcularHorasTrabalhadas(OrdemServico os)

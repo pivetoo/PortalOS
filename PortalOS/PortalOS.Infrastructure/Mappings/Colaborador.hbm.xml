@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<hibernate-mapping xmlns="urn:nhibernate-mapping-2.2" assembly="PortalOS.Domain" namespace="PortalOS.Domain.Entities">
+  <class name="Colaborador" table="Colaborador" lazy="false" batch-size="100">
+    <id name="Id" type="long" column="Id">
+      <generator class="native" />
+    </id>
+
+    <property name="CriadoEm" column="CriadoEm" type="DateTime" not-null="false" />
+    <property name="UltimaAlteracao" column="UltimaAlteracao" type="DateTime" not-null="false" />
+
+    <property name="UsuarioIdp" column="UsuarioIdp" type="long" not-null="true" unique="true" />
+    <property name="Nome" column="Nome" type="string" length="200" not-null="true" />
+    <property name="Email" column="Email" type="string" length="200" not-null="false" />
+    <property name="Ativo" column="Ativo" type="bool" not-null="true" />
+  </class>
+</hibernate-mapping>

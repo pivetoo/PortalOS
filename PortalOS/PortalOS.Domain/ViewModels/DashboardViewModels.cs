@@ -11,7 +11,7 @@ namespace PortalOS.Domain.ViewModels
 
     public class HorasPorMesItem
     {
-        public string Name { get; set; }
+        public int Mes { get; set; }
         public decimal Horas { get; set; }
     }
 

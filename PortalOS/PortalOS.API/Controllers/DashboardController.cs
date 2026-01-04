@@ -8,27 +8,26 @@ namespace PortalOS.API.Controllers
     public class DashboardController : ApiControllerBase
     {
         private readonly DashboardService _dashboardService;
+        private readonly ColaboradorService _colaboradorService;
 
-        public DashboardController(DashboardService dashboardService)
+        public DashboardController(DashboardService dashboardService, ColaboradorService colaboradorService)
         {
             _dashboardService = dashboardService;
+            _colaboradorService = colaboradorService;
         }
 
         [RequirePermission("dashboard.read")]
         [GetEndpoint]
         public IActionResult Get([FromQuery] int? ano)
         {
-            var anoAtual = ano ?? DateTime.Now.Year;
-            var dashboard = _dashboardService.GetDashboardData(anoAtual);
-            return Http200(dashboard);
-        }
+            var colaborador = _colaboradorService.GetByUsuarioIdp(CurrentUserId!.Value);
+            if (colaborador == null)
+            {
+                return Http404("Colaborador nao encontrado");
+            }
 
-        [RequirePermission("dashboard.read")]
-        [GetEndpoint("colaborador/{colaborador}")]
-        public IActionResult GetByColaborador(string colaborador, [FromQuery] int? ano)
-        {
             var anoAtual = ano ?? DateTime.Now.Year;
-            var dashboard = _dashboardService.GetDashboardDataPorColaborador(anoAtual, colaborador);
+            var dashboard = _dashboardService.GetDashboardData(anoAtual, colaborador.Id);
             return Http200(dashboard);
         }
     }

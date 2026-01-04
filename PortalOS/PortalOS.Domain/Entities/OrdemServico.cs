@@ -4,7 +4,7 @@ namespace PortalOS.Domain.Entities
 {
     public class OrdemServico : EntidadeBase
     {
-        public Projeto Projeto { get; set; }
+        public Tarefa Tarefa { get; set; }
 
         public DateTime DataAgenda { get; set; }
 
@@ -18,6 +18,6 @@ namespace PortalOS.Domain.Entities
 
         public string Descricao { get; set; }
 
-        public string Colaborador { get; set; }
+        public Colaborador Colaborador { get; set; }
     }
 }
