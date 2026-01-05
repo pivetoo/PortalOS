@@ -8,7 +8,7 @@ import Apontamentos from '../modules/apontamentos/Apontamentos';
 
 const AppRoutes = () => {
   const { user } = useAuth();
-  const identityProviderUrl = import.meta.env.VITE_IDENTITY_PROVIDER_URL;
+  const identityProviderUrl = import.meta.env.VITE_IDENTITY_PROVIDER_WEB;
 
   return (
     <BrowserRouter>

@@ -9,6 +9,8 @@ import type { OrdemServico, CreateOrdemServicoRequest, UpdateOrdemServicoRequest
 import type { Cliente } from '../../types/cliente';
 import type { Projeto } from '../../types/projeto';
 import type { Tarefa } from '../../types/tarefa';
+import { meses, diasSemana } from '../../utils/constants';
+import { formatDateToInput, formatTimeToInput, formatHoras } from '../../utils/formatters';
 
 interface ApontamentoForm {
   id: number | null;
@@ -23,47 +25,7 @@ interface ApontamentoForm {
   descricao: string;
 }
 
-const meses = [
-  { value: '1', label: 'Janeiro' },
-  { value: '2', label: 'Fevereiro' },
-  { value: '3', label: 'Março' },
-  { value: '4', label: 'Abril' },
-  { value: '5', label: 'Maio' },
-  { value: '6', label: 'Junho' },
-  { value: '7', label: 'Julho' },
-  { value: '8', label: 'Agosto' },
-  { value: '9', label: 'Setembro' },
-  { value: '10', label: 'Outubro' },
-  { value: '11', label: 'Novembro' },
-  { value: '12', label: 'Dezembro' },
-];
-
-const diasSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-
-function formatDateToInput(dateString: string): string {
-  if (!dateString) return '';
-  const date = new Date(dateString);
-  return date.toISOString().split('T')[0];
-}
-
-function formatTimeToInput(dateTimeString: string | null): string {
-  if (!dateTimeString) return '';
-  const date = new Date(dateTimeString);
-  return date.toTimeString().slice(0, 5);
-}
-
-function formatHorasDisplay(totalHoras: number): string {
-  const horas = Math.floor(totalHoras);
-  const minutos = Math.round((totalHoras - horas) * 60);
-  return `${horas.toString().padStart(2, '0')}:${minutos.toString().padStart(2, '0')}`;
-}
-
-function calcularTotalHoras(
-  horaInicio: string,
-  horaFim: string,
-  inicioIntervalo?: string,
-  fimIntervalo?: string
-): number {
+function calcularTotalHoras(horaInicio: string, horaFim: string, inicioIntervalo?: string, fimIntervalo?: string): number {
   if (!horaInicio || !horaFim) return 0;
 
   const diffMinutos = (inicio: string, fim: string): number => {
@@ -338,7 +300,7 @@ export default function Apontamentos() {
                 <div className="flex items-center gap-2 text-lg font-semibold">
                   <Clock size={20} className="text-muted-foreground" />
                   <span>Total:</span>
-                  <span className="text-primary">{formatHorasDisplay(totalMes)}</span>
+                  <span className="text-primary">{formatHoras(totalMes)}</span>
                 </div>
                 <Button variant="outline" onClick={handleRelatorioMensal} className="gap-2">
                   <FileText size={16} />
@@ -444,7 +406,7 @@ export default function Apontamentos() {
                             {formatTimeToInput(ap.horaFim)}
                           </td>
                           <td className={`border-r px-3 py-2 text-center font-mono font-semibold text-primary ${!isFirstOfDay ? 'border-t border-t-muted' : 'border-t'}`}>
-                            {formatHorasDisplay(ap.totalHoras)}
+                            {formatHoras(ap.totalHoras)}
                           </td>
                           <td className={`border-r px-3 py-2 text-muted-foreground truncate max-w-[300px] ${!isFirstOfDay ? 'border-t border-t-muted' : 'border-t'}`} title={ap.descricao || ''}>
                             {ap.descricao || '-'}
@@ -610,7 +572,7 @@ export default function Apontamentos() {
               <div className="p-3 bg-muted rounded-lg text-center">
                 <span className="text-xs text-muted-foreground">Total</span>
                 <div className="text-lg font-bold text-primary">
-                  {formatHorasDisplay(formTotalHoras)}
+                  {formatHoras(formTotalHoras)}
                 </div>
               </div>
             </div>
