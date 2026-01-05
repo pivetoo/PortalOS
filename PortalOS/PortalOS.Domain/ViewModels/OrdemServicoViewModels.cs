@@ -5,6 +5,7 @@ namespace PortalOS.Domain.ViewModels
     public class CreateOrdemServicoRequest
     {
         public long TarefaId { get; set; }
+        public DateTime DataAgenda { get; set; }
         public DateTime HoraInicio { get; set; }
         public DateTime? InicioIntervalo { get; set; }
         public DateTime? FimIntervalo { get; set; }

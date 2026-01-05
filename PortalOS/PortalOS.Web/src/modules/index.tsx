@@ -99,12 +99,18 @@ export default function Dashboard() {
             <CardTitle>Horas por Projeto</CardTitle>
           </CardHeader>
           <CardContent>
-            <PieChart
-              data={dashboard.horasPorProjeto}
-              height={300}
-              showLegend={true}
-              outerRadius={80}
-            />
+            {dashboard.horasPorProjeto.length > 0 ? (
+              <PieChart
+                data={dashboard.horasPorProjeto}
+                height={300}
+                showLegend={true}
+                outerRadius={80}
+              />
+            ) : (
+              <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+                Nenhum apontamento registrado
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

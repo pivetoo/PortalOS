@@ -16,4 +16,8 @@
     <ProjectReference Include="..\PortalOS.Infrastructure\PortalOS.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\Empresa\" />
+  </ItemGroup>
+
 </Project>

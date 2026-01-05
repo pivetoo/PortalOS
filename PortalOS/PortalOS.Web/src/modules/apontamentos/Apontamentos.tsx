@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Clock, Plus, Pencil, Trash2 } from 'lucide-react';
+import { Clock, Plus, Pencil, Trash2, Printer, FileText } from 'lucide-react';
 import { PageLayout, Card, CardContent, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Button, toast, useApi, Modal, ModalContent, ModalHeader, ModalTitle, ModalFooter, Input } from 'd-rts';
 import { ordemServicoService } from '../../services/ordemServicoService';
 import { clienteService } from '../../services/clienteService';
@@ -88,10 +88,10 @@ function emptyForm(): ApontamentoForm {
     projetoId: null,
     clienteId: null,
     dataAgenda: null,
-    horaInicio: '08:00',
-    horaFim: '17:00',
-    inicioIntervalo: '12:00',
-    fimIntervalo: '13:00',
+    horaInicio: '',
+    horaFim: '',
+    inicioIntervalo: '',
+    fimIntervalo: '',
     descricao: ''
   };
 }
@@ -159,7 +159,12 @@ export default function Apontamentos() {
   };
 
   const openNewModal = () => {
-    setForm(emptyForm());
+    const hoje = new Date();
+    const dataLocal = `${hoje.getFullYear()}-${(hoje.getMonth() + 1).toString().padStart(2, '0')}-${hoje.getDate().toString().padStart(2, '0')}`;
+    setForm({
+      ...emptyForm(),
+      dataAgenda: dataLocal
+    });
     setModalOpen(true);
   };
 
@@ -228,6 +233,7 @@ export default function Apontamentos() {
     if (form.id === null) {
       const request: CreateOrdemServicoRequest = {
         tarefaId: form.tarefaId!,
+        dataAgenda: new Date(baseDate + 'T00:00:00').toISOString(),
         horaInicio,
         horaFim,
         inicioIntervalo,
@@ -239,7 +245,7 @@ export default function Apontamentos() {
       if (novaOrdem) {
         setApontamentos((prev) => [...prev, novaOrdem]);
         setModalOpen(false);
-        toast({ title: 'Apontamento criado com sucesso' });
+        toast({ title: 'Apontamento criado com sucesso', variant: 'success' });
       }
     } else {
       const request: UpdateOrdemServicoRequest = {
@@ -257,7 +263,7 @@ export default function Apontamentos() {
       if (ordemAtualizada) {
         setApontamentos((prev) => prev.map((ap) => (ap.id === form.id ? ordemAtualizada : ap)));
         setModalOpen(false);
-        toast({ title: 'Apontamento atualizado com sucesso' });
+        toast({ title: 'Apontamento atualizado com sucesso', variant: 'success' });
       }
     }
   };
@@ -265,7 +271,25 @@ export default function Apontamentos() {
   const handleDelete = async (ap: OrdemServico) => {
     await deleteApontamento(() => ordemServicoService.delete(ap.id));
     setApontamentos((prev) => prev.filter((a) => a.id !== ap.id));
-    toast({ title: 'Apontamento removido com sucesso' });
+    toast({ title: 'Apontamento removido com sucesso', variant: 'success' });
+  };
+
+  const handlePrint = async (ap: OrdemServico) => {
+    try {
+      await ordemServicoService.downloadPdf(ap.id);
+      toast({ title: 'PDF gerado com sucesso', variant: 'success' });
+    } catch {
+      toast({ title: 'Erro ao gerar PDF', variant: 'destructive' });
+    }
+  };
+
+  const handleRelatorioMensal = async () => {
+    try {
+      await ordemServicoService.downloadRelatorioMensal(parseInt(ano), parseInt(mes));
+      toast({ title: 'Relatorio gerado com sucesso', variant: 'success' });
+    } catch {
+      toast({ title: 'Erro ao gerar relatorio', variant: 'destructive' });
+    }
   };
 
   const formTotalHoras = calcularTotalHoras(
@@ -310,10 +334,16 @@ export default function Apontamentos() {
                 </Button>
               </div>
 
-              <div className="flex items-center gap-2 text-lg font-semibold">
-                <Clock size={20} className="text-muted-foreground" />
-                <span>Total:</span>
-                <span className="text-primary">{formatHorasDisplay(totalMes)}</span>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2 text-lg font-semibold">
+                  <Clock size={20} className="text-muted-foreground" />
+                  <span>Total:</span>
+                  <span className="text-primary">{formatHorasDisplay(totalMes)}</span>
+                </div>
+                <Button variant="outline" onClick={handleRelatorioMensal} className="gap-2">
+                  <FileText size={16} />
+                  Relatorio Mensal
+                </Button>
               </div>
             </div>
           </CardContent>
@@ -382,18 +412,16 @@ export default function Apontamentos() {
                           `}
                         >
                           <td className={`border-r px-3 py-2 font-medium ${!isFirstOfDay ? 'border-t border-t-muted' : 'border-t'}`}>
-                            {isFirstOfDay ? (
-                              <button
-                                onClick={() => openNewModal()}
-                                className="hover:text-primary transition-colors text-left"
-                                title="Adicionar apontamento neste dia"
-                              >
-                                {date.getDate().toString().padStart(2, '0')}/{(date.getMonth() + 1).toString().padStart(2, '0')}
-                              </button>
-                            ) : null}
+                            <button
+                              onClick={() => openNewModal()}
+                              className="hover:text-primary transition-colors text-left"
+                              title="Adicionar apontamento neste dia"
+                            >
+                              {date.getDate().toString().padStart(2, '0')}/{(date.getMonth() + 1).toString().padStart(2, '0')}
+                            </button>
                           </td>
                           <td className={`border-r px-3 py-2 text-muted-foreground ${!isFirstOfDay ? 'border-t border-t-muted' : 'border-t'}`}>
-                            {isFirstOfDay ? dayOfWeek : null}
+                            {dayOfWeek}
                           </td>
                           <td className={`border-r px-3 py-2 ${!isFirstOfDay ? 'border-t border-t-muted' : 'border-t'}`}>
                             {ap.clienteNome}
@@ -431,6 +459,13 @@ export default function Apontamentos() {
                                 <Pencil size={14} />
                               </button>
                               <button
+                                onClick={() => handlePrint(ap)}
+                                className="p-1.5 rounded hover:bg-primary/10 text-primary transition-colors"
+                                title="Imprimir PDF"
+                              >
+                                <Printer size={14} />
+                              </button>
+                              <button
                                 onClick={() => handleDelete(ap)}
                                 className="p-1.5 rounded hover:bg-destructive/10 text-destructive transition-colors"
                                 title="Excluir"
@@ -458,23 +493,6 @@ export default function Apontamentos() {
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' }} className="py-4">
             <div style={{ gridColumn: 'span 2' }} className="space-y-2">
-              <label htmlFor="cliente" className="text-sm font-medium">Cliente</label>
-              <Select
-                value={form.clienteId?.toString() || ''}
-                onValueChange={(value) => handleFormChange('clienteId', value ? parseInt(value) : null)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione" />
-                </SelectTrigger>
-                <SelectContent>
-                  {clientes.map((c) => (
-                    <SelectItem key={c.id} value={c.id.toString()}>{c.razaoSocial}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div style={{ gridColumn: 'span 2' }} className="space-y-2">
               <label htmlFor="projeto" className="text-sm font-medium">Projeto</label>
               <Select
                 value={form.projetoId?.toString() || ''}
@@ -491,7 +509,24 @@ export default function Apontamentos() {
               </Select>
             </div>
 
-            <div style={{ gridColumn: 'span 4' }} className="space-y-2">
+            <div style={{ gridColumn: 'span 2' }} className="space-y-2">
+              <label htmlFor="cliente" className="text-sm font-medium">Cliente</label>
+              <Select
+                value={form.clienteId?.toString() || ''}
+                onValueChange={(value) => handleFormChange('clienteId', value ? parseInt(value) : null)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione" />
+                </SelectTrigger>
+                <SelectContent>
+                  {clientes.map((c) => (
+                    <SelectItem key={c.id} value={c.id.toString()}>{c.razaoSocial}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div style={{ gridColumn: 'span 3' }} className="space-y-2">
               <label htmlFor="tarefa" className="text-sm font-medium">Tarefa</label>
               <Select
                 value={form.tarefaId?.toString() || ''}
@@ -507,6 +542,16 @@ export default function Apontamentos() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="dataAgenda" className="text-sm font-medium">Data</label>
+              <Input
+                id="dataAgenda"
+                type="date"
+                value={form.dataAgenda || ''}
+                onChange={(e) => handleFormChange('dataAgenda', e.target.value)}
+              />
             </div>
 
             <div className="space-y-2">

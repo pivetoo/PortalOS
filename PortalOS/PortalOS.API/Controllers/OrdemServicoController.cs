@@ -1,5 +1,6 @@
 using dNET.API.Attributes;
 using dNET.API.Controllers;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Query;
 using PortalOS.Domain.Entities;
@@ -12,11 +13,20 @@ namespace PortalOS.API.Controllers
     {
         private readonly OrdemServicoService _ordemServicoService;
         private readonly ColaboradorService _colaboradorService;
+        private readonly OrdemServicoPdfService _pdfService;
 
-        public OrdemServicoController(OrdemServicoService ordemServicoService, ColaboradorService colaboradorService) : base(ordemServicoService)
+        public OrdemServicoController(
+            OrdemServicoService ordemServicoService,
+            ColaboradorService colaboradorService,
+            OrdemServicoPdfService pdfService,
+            IWebHostEnvironment env) : base(ordemServicoService)
         {
             _ordemServicoService = ordemServicoService;
             _colaboradorService = colaboradorService;
+            _pdfService = pdfService;
+
+            var logoPath = Path.Combine(env.WebRootPath, "Empresa", "logo-empresa.png");
+            _pdfService.SetLogoPath(logoPath);
         }
 
         [RequirePermission("ordens.servico.read")]
@@ -119,6 +129,31 @@ namespace PortalOS.API.Controllers
                 }
                 return Http200(new { message = "Ordem de Servico deletada com sucesso" });
             });
+        }
+
+        [RequirePermission("ordens.servico.read")]
+        [GetEndpoint("{id}/pdf")]
+        public IActionResult GetPdf(long id)
+        {
+            try
+            {
+                var pdfBytes = _pdfService.GerarPdfOrdemServico(id);
+                var numeroOs = id.ToString().PadLeft(9, '0');
+                return File(pdfBytes, "application/pdf", $"OS_{numeroOs}.pdf");
+            }
+            catch (KeyNotFoundException)
+            {
+                return Http404("Ordem de Servico nao encontrada");
+            }
+        }
+
+        [RequirePermission("ordens.servico.read")]
+        [GetEndpoint("relatorio/{ano}/{mes}/pdf")]
+        public IActionResult GetRelatorioMensal(int ano, int mes)
+        {
+            var pdfBytes = _pdfService.GerarRelatorioMensal(mes, ano);
+            var nomeMes = new DateTime(ano, mes, 1).ToString("MMMM", new System.Globalization.CultureInfo("pt-BR"));
+            return File(pdfBytes, "application/pdf", $"Relacao_OS_{nomeMes}_{ano}.pdf");
         }
     }
 }

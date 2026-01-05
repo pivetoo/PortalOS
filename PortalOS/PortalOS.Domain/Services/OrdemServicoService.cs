@@ -34,7 +34,7 @@ namespace PortalOS.Domain.Services
             {
                 Tarefa = tarefa,
                 Colaborador = colaborador,
-                DataAgenda = DateTime.Now,
+                DataAgenda = request.DataAgenda,
                 HoraInicio = request.HoraInicio,
                 InicioIntervalo = request.InicioIntervalo,
                 FimIntervalo = request.FimIntervalo,

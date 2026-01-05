@@ -19,6 +19,7 @@ export interface OrdemServico {
 
 export interface CreateOrdemServicoRequest {
   tarefaId: number;
+  dataAgenda: string;
   horaInicio: string;
   inicioIntervalo?: string | null;
   fimIntervalo?: string | null;

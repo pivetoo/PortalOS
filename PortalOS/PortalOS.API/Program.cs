@@ -21,6 +21,7 @@ builder.Services
     .AddServicesFromAssembly(domainAssembly);
 
 builder.Services.AddScoped<DashboardService>();
+builder.Services.AddScoped<OrdemServicoPdfService>();
 
 builder.Services.AddSingleton<IdentityProviderClient>();
 builder.Services.AddScoped<DynamicJwtValidator>();

@@ -139,7 +139,7 @@ export default function Projetos() {
       const result = await saveTarefa(() => tarefaService.update(editingTarefa.id, request));
       if (result) {
         setTarefas(prev => prev.map(t => t.id === editingTarefa.id ? result : t));
-        toast({ title: 'Tarefa atualizada com sucesso' });
+        toast({ title: 'Tarefa atualizada com sucesso', variant: 'success' });
       }
     } else {
       const request: CreateTarefaRequest = {
@@ -150,7 +150,7 @@ export default function Projetos() {
       const result = await saveTarefa(() => tarefaService.create(request));
       if (result) {
         setTarefas(prev => [...prev, result]);
-        toast({ title: 'Tarefa criada com sucesso' });
+        toast({ title: 'Tarefa criada com sucesso', variant: 'success' });
       }
     }
 
@@ -160,7 +160,7 @@ export default function Projetos() {
   const handleDeleteTarefa = async (tarefa: Tarefa) => {
     await deleteTarefa(() => tarefaService.delete(tarefa.id));
     setTarefas(prev => prev.filter(t => t.id !== tarefa.id));
-    toast({ title: 'Tarefa removida com sucesso' });
+    toast({ title: 'Tarefa removida com sucesso', variant: 'success' });
   };
 
   const columns: DataTableWithDetailColumn<Projeto>[] = [
@@ -297,8 +297,8 @@ export default function Projetos() {
       title="Projetos"
       icon={<FolderKanban size={24} />}
       onAdd={handleAdd}
-      onEdit={selectedProjeto ? handleEdit : undefined}
-      onDelete={selectedProjeto ? handleDelete : undefined}
+      onEdit={handleEdit}
+      onDelete={handleDelete}
       onRefresh={handleRefresh}
       selectedRowsCount={selectedProjeto ? 1 : 0}
     >

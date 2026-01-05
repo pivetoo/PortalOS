@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="QuestPDF" Version="2025.12.1" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\..\..\frameworks\dNET\dNET\dNET.Domain\dNET.Domain.csproj" />
   </ItemGroup>
 
