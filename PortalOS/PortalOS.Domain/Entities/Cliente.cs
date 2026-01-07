@@ -9,7 +9,6 @@ namespace PortalOS.Domain.Entities
         [NotEmpty]
         public string RazaoSocial { get; set; }
 
-        [CpfCnpj]
         public string Cnpj { get; set; }
 
         public string Responsavel { get; set; }

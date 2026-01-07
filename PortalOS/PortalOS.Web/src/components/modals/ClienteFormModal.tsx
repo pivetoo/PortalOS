@@ -1,23 +1,9 @@
 import { useEffect, useState } from 'react';
-import {
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalTitle,
-  ModalFooter,
-  Button,
-  Input,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Checkbox,
-  useApi
-} from 'd-rts';
+import { Modal, ModalContent, ModalHeader, ModalTitle, ModalFooter, Button, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Checkbox, useApi } from 'd-rts';
 import { clienteService } from '../../services/clienteService';
 import { StatusCliente } from '../../types/cliente';
 import type { Cliente, CreateClienteRequest } from '../../types/cliente';
+import { maskCnpj, maskTelefone } from '../../utils/formatters';
 
 interface ClienteFormModalProps {
   open: boolean;
@@ -106,7 +92,8 @@ export default function ClienteFormModal({ open, onOpenChange, cliente, onSucces
               <Input
                 id="cnpj"
                 value={formData.cnpj}
-                onChange={(e) => handleChange('cnpj', e.target.value)}
+                onChange={(e) => handleChange('cnpj', maskCnpj(e.target.value))}
+                placeholder="00.000.000/0000-00"
               />
             </div>
 
@@ -124,7 +111,8 @@ export default function ClienteFormModal({ open, onOpenChange, cliente, onSucces
               <Input
                 id="telefone"
                 value={formData.telefone}
-                onChange={(e) => handleChange('telefone', e.target.value)}
+                onChange={(e) => handleChange('telefone', maskTelefone(e.target.value))}
+                placeholder="(00) 00000-0000"
               />
             </div>
 

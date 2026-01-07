@@ -1,6 +1,5 @@
 import { useLocation, useNavigate, Outlet } from 'react-router-dom';
 import { LayoutDashboard, Users, FolderKanban, Clock } from 'lucide-react';
-import logoPortalOs from '../assets/logo-portalos.png';
 import logoSidebar from '../assets/logo-sidebar.png';
 import { AppLayout, useAuth, AuthService, useBreadcrumbs } from 'd-rts';
 
@@ -58,16 +57,14 @@ export default function PortalOSLayout() {
     <AppLayout
       title={contract!.applicationName}
       subtitle={contract!.companyName}
-      logo={
-        <img src={logoPortalOs} alt="PortalOS" className="w-8 h-8 object-contain" />
-      }
       user={user}
       onLogout={handleLogout}
       menuItems={menuItems}
       menuGroups={menuGroups}
       initialCollapsed={false}
       breadcrumbs={breadcrumbs}
-      companyLogo={logoSidebar}
+      headerMode="companyLogo"
+      headerLogo={logoSidebar}
     >
       <Outlet />
     </AppLayout>
