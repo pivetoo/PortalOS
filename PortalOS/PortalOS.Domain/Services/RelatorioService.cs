@@ -5,12 +5,12 @@ using QuestPDF.Infrastructure;
 
 namespace PortalOS.Domain.Services
 {
-    public class OrdemServicoPdfService
+    public class RelatorioService
     {
         private readonly OrdemServicoService _ordemServicoService;
         private string? _logoPath;
 
-        public OrdemServicoPdfService(OrdemServicoService ordemServicoService)
+        public RelatorioService(OrdemServicoService ordemServicoService)
         {
             _ordemServicoService = ordemServicoService;
             QuestPDF.Settings.License = LicenseType.Community;
@@ -42,6 +42,63 @@ namespace PortalOS.Domain.Services
                     page.Content().Element(c => ComposeContent(c, ordemServico));
                     page.Footer().Element(c => ComposeFooter(c, ordemServico));
                 });
+            });
+
+            return document.GeneratePdf();
+        }
+
+        public byte[] GerarRelatorioMensal(int mes, int ano)
+        {
+            var ordens = _ordemServicoService.GetByMesAno(mes, ano)
+                .OrderBy(o => o.DataAgenda)
+                .ThenBy(o => o.HoraInicio)
+                .ToList();
+
+            var nomeMes = new DateTime(ano, mes, 1).ToString("MMMM", new System.Globalization.CultureInfo("pt-BR"));
+            var totalHorasMes = ordens.Sum(o => CalcularTotalHorasDecimal(o));
+
+            var document = Document.Create(container =>
+            {
+                container.Page(page =>
+                {
+                    page.Size(PageSizes.A4.Landscape());
+                    page.Margin(20);
+                    page.DefaultTextStyle(x => x.FontSize(9).FontFamily("Arial"));
+
+                    page.Header().Element(c => ComposeRelatorioHeader(c, mes, ano, nomeMes));
+                    page.Content().Element(c => ComposeRelatorioContent(c, ordens));
+                    page.Footer().Element(c => ComposeRelatorioFooter(c, totalHorasMes));
+                });
+            });
+
+            return document.GeneratePdf();
+        }
+
+        public byte[] GerarPdfPorPeriodo(DateTime dataInicio, DateTime dataFim)
+        {
+            var ordens = _ordemServicoService.GetByPeriodo(dataInicio, dataFim)
+                .OrderBy(o => o.DataAgenda)
+                .ThenBy(o => o.HoraInicio)
+                .ToList();
+
+            if (ordens.Count == 0)
+                throw new KeyNotFoundException("Nenhuma Ordem de Servico encontrada no periodo");
+
+            var document = Document.Create(container =>
+            {
+                foreach (var ordemServico in ordens)
+                {
+                    container.Page(page =>
+                    {
+                        page.Size(PageSizes.A4);
+                        page.Margin(30);
+                        page.DefaultTextStyle(x => x.FontSize(10).FontFamily("Arial"));
+
+                        page.Header().Element(c => ComposeHeader(c, ordemServico));
+                        page.Content().Element(c => ComposeContent(c, ordemServico));
+                        page.Footer().Element(c => ComposeFooter(c, ordemServico));
+                    });
+                }
             });
 
             return document.GeneratePdf();
@@ -214,50 +271,6 @@ namespace PortalOS.Domain.Services
             });
         }
 
-        private string FormatarTotalHoras(OrdemServico os)
-        {
-            var inicio = os.HoraInicio.TimeOfDay;
-            var fim = os.HoraFim.TimeOfDay;
-            var intervalo = TimeSpan.Zero;
-
-            if (os.InicioIntervalo.HasValue && os.FimIntervalo.HasValue)
-            {
-                intervalo = os.FimIntervalo.Value.TimeOfDay - os.InicioIntervalo.Value.TimeOfDay;
-            }
-
-            var total = fim - inicio - intervalo;
-            if (total < TimeSpan.Zero) total = TimeSpan.Zero;
-
-            return $"{(int)total.TotalHours:00}:{total.Minutes:00}";
-        }
-
-        public byte[] GerarRelatorioMensal(int mes, int ano)
-        {
-            var ordens = _ordemServicoService.GetByMesAno(mes, ano)
-                .OrderBy(o => o.DataAgenda)
-                .ThenBy(o => o.HoraInicio)
-                .ToList();
-
-            var nomeMes = new DateTime(ano, mes, 1).ToString("MMMM", new System.Globalization.CultureInfo("pt-BR"));
-            var totalHorasMes = ordens.Sum(o => CalcularTotalHorasDecimal(o));
-
-            var document = Document.Create(container =>
-            {
-                container.Page(page =>
-                {
-                    page.Size(PageSizes.A4.Landscape());
-                    page.Margin(20);
-                    page.DefaultTextStyle(x => x.FontSize(9).FontFamily("Arial"));
-
-                    page.Header().Element(c => ComposeRelatorioHeader(c, mes, ano, nomeMes));
-                    page.Content().Element(c => ComposeRelatorioContent(c, ordens));
-                    page.Footer().Element(c => ComposeRelatorioFooter(c, totalHorasMes));
-                });
-            });
-
-            return document.GeneratePdf();
-        }
-
         private void ComposeRelatorioHeader(IContainer container, int mes, int ano, string nomeMes)
         {
             container.Column(column =>
@@ -301,10 +314,10 @@ namespace PortalOS.Domain.Services
                     columns.RelativeColumn(2);   // Cliente
                     columns.RelativeColumn(2);   // Projeto
                     columns.RelativeColumn(1.5f); // Tarefa
+                    columns.RelativeColumn(1.5f); // Responsavel
                     columns.ConstantColumn(45);  // Entrada
                     columns.ConstantColumn(45);  // Saida
                     columns.ConstantColumn(45);  // Total
-                    columns.RelativeColumn(2);   // Descricao
                 });
 
                 table.Header(header =>
@@ -314,10 +327,10 @@ namespace PortalOS.Domain.Services
                     header.Cell().Background("#e0e0e0").Border(1).Padding(4).Text("CLIENTE").Bold().FontSize(8);
                     header.Cell().Background("#e0e0e0").Border(1).Padding(4).Text("PROJETO").Bold().FontSize(8);
                     header.Cell().Background("#e0e0e0").Border(1).Padding(4).Text("TAREFA").Bold().FontSize(8);
+                    header.Cell().Background("#e0e0e0").Border(1).Padding(4).Text("RESPONSÁVEL").Bold().FontSize(8);
                     header.Cell().Background("#e0e0e0").Border(1).Padding(4).AlignCenter().Text("ENTRADA").Bold().FontSize(8);
                     header.Cell().Background("#e0e0e0").Border(1).Padding(4).AlignCenter().Text("SAÍDA").Bold().FontSize(8);
                     header.Cell().Background("#e0e0e0").Border(1).Padding(4).AlignCenter().Text("TOTAL").Bold().FontSize(8);
-                    header.Cell().Background("#e0e0e0").Border(1).Padding(4).Text("DESCRIÇÃO").Bold().FontSize(8);
                 });
 
                 foreach (var os in ordens)
@@ -335,14 +348,14 @@ namespace PortalOS.Domain.Services
                         .Text(projeto?.Nome ?? "-").FontSize(8);
                     table.Cell().BorderBottom(1).BorderRight(1).Padding(3)
                         .Text(os.Tarefa?.Nome ?? "-").FontSize(8);
+                    table.Cell().BorderBottom(1).BorderRight(1).Padding(3)
+                        .Text(projeto?.Responsavel ?? "-").FontSize(8);
                     table.Cell().BorderBottom(1).BorderRight(1).Padding(3).AlignCenter()
                         .Text(os.HoraInicio.ToString("HH:mm")).FontSize(8);
                     table.Cell().BorderBottom(1).BorderRight(1).Padding(3).AlignCenter()
                         .Text(os.HoraFim.ToString("HH:mm")).FontSize(8);
                     table.Cell().BorderBottom(1).BorderRight(1).Padding(3).AlignCenter()
                         .Text(FormatarTotalHoras(os)).Bold().FontSize(8);
-                    table.Cell().BorderBottom(1).BorderRight(1).Padding(3)
-                        .Text(TruncarTexto(os.Descricao, 50)).FontSize(7);
                 }
             });
         }
@@ -364,6 +377,23 @@ namespace PortalOS.Domain.Services
                     });
                 });
             });
+        }
+
+        private string FormatarTotalHoras(OrdemServico os)
+        {
+            var inicio = os.HoraInicio.TimeOfDay;
+            var fim = os.HoraFim.TimeOfDay;
+            var intervalo = TimeSpan.Zero;
+
+            if (os.InicioIntervalo.HasValue && os.FimIntervalo.HasValue)
+            {
+                intervalo = os.FimIntervalo.Value.TimeOfDay - os.InicioIntervalo.Value.TimeOfDay;
+            }
+
+            var total = fim - inicio - intervalo;
+            if (total < TimeSpan.Zero) total = TimeSpan.Zero;
+
+            return $"{(int)total.TotalHours:00}:{total.Minutes:00}";
         }
 
         private decimal CalcularTotalHorasDecimal(OrdemServico os)

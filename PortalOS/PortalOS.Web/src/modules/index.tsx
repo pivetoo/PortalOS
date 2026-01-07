@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, BarChart, PieChart, useApi } from 'd-rts';
-import { FolderKanban, Clock, CheckCircle } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, BarChart, useApi } from 'd-rts';
+import { Clock } from 'lucide-react';
 import { dashboardService } from '../services/dashboardService';
 import { formatMes, formatHoras } from '../utils/formatters';
 import type { DashboardResponse } from '../types/dashboard';
@@ -32,7 +32,7 @@ export default function Dashboard() {
     <div>
       <div>
         <h1 className="text-3xl font-bold mb-2">
-          Bem-vindo ao Portal OS!
+          Bem-vindo ao Portal HVTECH!
         </h1>
         <p className="text-muted-foreground">Acompanhe suas horas apontadas em {anoAtual}</p>
       </div>
@@ -49,36 +49,10 @@ export default function Dashboard() {
             <div className="text-3xl font-bold text-blue-600">{formatHoras(dashboard.horasMesAtual)}</div>
           </CardContent>
         </Card>
-
-        <Card className="border-l-4 border-l-amber-500">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Projetos Ativos
-            </CardTitle>
-            <FolderKanban className="h-5 w-5 text-amber-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-amber-600">{dashboard.projetosAtivos}</div>
-            <p className="text-xs text-muted-foreground">em andamento</p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-l-4 border-l-emerald-500">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Projetos Finalizados
-            </CardTitle>
-            <CheckCircle className="h-5 w-5 text-emerald-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-emerald-600">{dashboard.projetosFinalizados}</div>
-            <p className="text-xs text-muted-foreground">concluídos</p>
-          </CardContent>
-        </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-        <Card className="lg:col-span-2">
+      <div className="mt-6">
+        <Card>
           <CardHeader>
             <CardTitle>Horas por Mes</CardTitle>
           </CardHeader>
@@ -91,26 +65,6 @@ export default function Dashboard() {
               colors={['#2E5EAA']}
               showLegend={false}
             />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Horas por Projeto</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {dashboard.horasPorProjeto.length > 0 ? (
-              <PieChart
-                data={dashboard.horasPorProjeto}
-                height={300}
-                showLegend={true}
-                outerRadius={80}
-              />
-            ) : (
-              <div className="flex items-center justify-center h-[300px] text-muted-foreground">
-                Nenhum apontamento registrado
-              </div>
-            )}
           </CardContent>
         </Card>
       </div>

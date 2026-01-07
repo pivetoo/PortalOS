@@ -10,6 +10,7 @@
 
     <property name="Nome" column="Nome" type="string"  length="200"  not-null="true" />
     <property name="Descricao" column="Descricao" type="string"  length="5000"  not-null="false" />
+    <property name="QtdHoras" column="QtdHoras" type="decimal"  not-null="true" />
 
     <many-to-one name="Projeto" class="PortalOS.Domain.Entities.Projeto" column="ProjetoId" not-null="true" lazy="false" index="idx_tarefa_projeto" foreign-key="fk_tarefa_projeto" />
   </class>

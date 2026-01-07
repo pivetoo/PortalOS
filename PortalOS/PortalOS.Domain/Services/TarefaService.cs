@@ -26,7 +26,8 @@ namespace PortalOS.Domain.Services
             {
                 Projeto = projeto,
                 Nome = request.Nome,
-                Descricao = request.Descricao
+                Descricao = request.Descricao,
+                QtdHoras = request.QtdHoras
             };
 
             Insert(tarefa);
@@ -55,6 +56,7 @@ namespace PortalOS.Domain.Services
             tarefa.Projeto = projeto;
             tarefa.Nome = request.Nome;
             tarefa.Descricao = request.Descricao;
+            tarefa.QtdHoras = request.QtdHoras;
 
             Merge(tarefa);
             return tarefa;

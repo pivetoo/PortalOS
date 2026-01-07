@@ -28,8 +28,7 @@ namespace PortalOS.Domain.Services
                 Nome = request.Nome,
                 Responsavel = request.Responsavel,
                 EmailResponsavel = request.EmailResponsavel,
-                StatusProjeto = request.StatusProjeto,
-                QtdTotalHoras = request.QtdTotalHoras
+                StatusProjeto = request.StatusProjeto
             };
 
             Insert(projeto);
@@ -60,7 +59,6 @@ namespace PortalOS.Domain.Services
             projeto.Responsavel = request.Responsavel;
             projeto.EmailResponsavel = request.EmailResponsavel;
             projeto.StatusProjeto = request.StatusProjeto;
-            projeto.QtdTotalHoras = request.QtdTotalHoras;
 
             Merge(projeto);
             return projeto;
@@ -73,7 +71,7 @@ namespace PortalOS.Domain.Services
 
         public IEnumerable<Projeto> GetAtivos()
         {
-            return Query(p => p.StatusProjeto == ValueObjects.StatusProjeto.Ativo);
+            return Query(p => p.StatusProjeto != ValueObjects.StatusProjeto.Entregue);
         }
     }
 }

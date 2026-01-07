@@ -72,7 +72,7 @@ export default function Clientes() {
   const columns: DataTableColumn<Cliente>[] = [
     {
       key: 'razaoSocial',
-      title: 'Razao Social',
+      title: 'Razão Social',
       dataIndex: 'razaoSocial'
     },
     {
@@ -82,7 +82,7 @@ export default function Clientes() {
     },
     {
       key: 'responsavel',
-      title: 'Responsavel',
+      title: 'Responsável',
       dataIndex: 'responsavel'
     },
     {

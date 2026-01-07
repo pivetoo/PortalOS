@@ -3,7 +3,7 @@ import { FolderKanban, Plus, Pencil, Trash2 } from 'lucide-react';
 import { PageLayout, DataTableWithDetail, Badge, ConfirmModal, useApi, Button, Input, toast, type DataTableWithDetailColumn, type PaginatedResult } from 'd-rts';
 import { projetoService } from '../../services/projetoService';
 import { tarefaService } from '../../services/tarefaService';
-import { StatusProjeto } from '../../types/projeto';
+import { StatusProjeto, StatusProjetoLabels } from '../../types/projeto';
 import type { Projeto } from '../../types/projeto';
 import type { Tarefa, CreateTarefaRequest, UpdateTarefaRequest } from '../../types/tarefa';
 import ProjetoFormModal from '../../components/modals/ProjetoFormModal';
@@ -17,7 +17,7 @@ export default function Projetos() {
 
   const [tarefas, setTarefas] = useState<Tarefa[]>([]);
   const [editingTarefa, setEditingTarefa] = useState<Tarefa | null>(null);
-  const [tarefaForm, setTarefaForm] = useState({ nome: '', descricao: '' });
+  const [tarefaForm, setTarefaForm] = useState({ nome: '', descricao: '', qtdHoras: 0 });
   const [isAddingTarefa, setIsAddingTarefa] = useState(false);
 
   const { execute: fetchProjetos } = useApi<PaginatedResult<Projeto>>({
@@ -59,7 +59,7 @@ export default function Projetos() {
     }
     setEditingTarefa(null);
     setIsAddingTarefa(false);
-    setTarefaForm({ nome: '', descricao: '' });
+    setTarefaForm({ nome: '', descricao: '', qtdHoras: 0 });
   }, [selectedProjeto?.id]);
 
   const handleAdd = () => {
@@ -105,25 +105,25 @@ export default function Projetos() {
 
   const handleAddTarefa = () => {
     setEditingTarefa(null);
-    setTarefaForm({ nome: '', descricao: '' });
+    setTarefaForm({ nome: '', descricao: '', qtdHoras: 0 });
     setIsAddingTarefa(true);
   };
 
   const handleEditTarefa = (tarefa: Tarefa) => {
     setEditingTarefa(tarefa);
-    setTarefaForm({ nome: tarefa.nome, descricao: tarefa.descricao || '' });
+    setTarefaForm({ nome: tarefa.nome, descricao: tarefa.descricao || '', qtdHoras: tarefa.qtdHoras });
     setIsAddingTarefa(true);
   };
 
   const handleCancelTarefa = () => {
     setEditingTarefa(null);
-    setTarefaForm({ nome: '', descricao: '' });
+    setTarefaForm({ nome: '', descricao: '', qtdHoras: 0 });
     setIsAddingTarefa(false);
   };
 
   const handleSaveTarefa = async () => {
     if (!tarefaForm.nome.trim()) {
-      toast({ title: 'Nome da tarefa e obrigatorio', variant: 'destructive' });
+      toast({ title: 'Nome da tarefa é obrigatório', variant: 'destructive' });
       return;
     }
 
@@ -134,7 +134,8 @@ export default function Projetos() {
         id: editingTarefa.id,
         projetoId: selectedProjeto.id,
         nome: tarefaForm.nome,
-        descricao: tarefaForm.descricao
+        descricao: tarefaForm.descricao,
+        qtdHoras: tarefaForm.qtdHoras
       };
       const result = await saveTarefa(() => tarefaService.update(editingTarefa.id, request));
       if (result) {
@@ -145,7 +146,8 @@ export default function Projetos() {
       const request: CreateTarefaRequest = {
         projetoId: selectedProjeto.id,
         nome: tarefaForm.nome,
-        descricao: tarefaForm.descricao
+        descricao: tarefaForm.descricao,
+        qtdHoras: tarefaForm.qtdHoras
       };
       const result = await saveTarefa(() => tarefaService.create(request));
       if (result) {
@@ -162,6 +164,7 @@ export default function Projetos() {
     setTarefas(prev => prev.filter(t => t.id !== tarefa.id));
     toast({ title: 'Tarefa removida com sucesso', variant: 'success' });
   };
+  
 
   const columns: DataTableWithDetailColumn<Projeto>[] = [
     {
@@ -178,11 +181,19 @@ export default function Projetos() {
       key: 'statusProjeto',
       title: 'Status',
       dataIndex: 'statusProjeto',
-      render: (value: StatusProjeto) => (
-        <Badge variant={value === StatusProjeto.Ativo ? 'success' : 'destructive'}>
-          {value === StatusProjeto.Ativo ? 'Ativo' : 'Inativo'}
-        </Badge>
-      )
+      render: (value: StatusProjeto) => {
+        const variants: Record<number, 'default' | 'secondary' | 'success' | 'warning' | 'destructive' | 'info'> = {
+          [StatusProjeto.AguardandoInicio]: 'warning',
+          [StatusProjeto.EmAndamento]: 'info',
+          [StatusProjeto.EmHomologacao]: 'destructive',
+          [StatusProjeto.Entregue]: 'success'
+        };
+        return (
+          <Badge variant={variants[value] || 'default'}>
+            {StatusProjetoLabels[value]}
+          </Badge>
+        );
+      }
     }
   ];
 
@@ -196,8 +207,8 @@ export default function Projetos() {
             <p className="font-medium">{projeto.clienteNome}</p>
           </div>
           <div>
-            <span className="text-muted-foreground text-xs">Horas Previstas</span>
-            <p className="font-medium">{projeto.qtdTotalHoras}h</p>
+            <span className="text-muted-foreground text-xs">Total Horas</span>
+            <p className="font-medium">{tarefas.reduce((acc, t) => acc + t.qtdHoras, 0)}h</p>
           </div>
           {projeto.responsavel && (
             <div>
@@ -232,11 +243,21 @@ export default function Projetos() {
               value={tarefaForm.nome}
               onChange={(e) => setTarefaForm(prev => ({ ...prev, nome: e.target.value }))}
             />
-            <Input
-              placeholder="Descricao (opcional)"
-              value={tarefaForm.descricao}
-              onChange={(e) => setTarefaForm(prev => ({ ...prev, descricao: e.target.value }))}
-            />
+            <div className="flex gap-2 w-full">
+              <Input
+                placeholder="Descrição (opcional)"
+                value={tarefaForm.descricao}
+                onChange={(e) => setTarefaForm(prev => ({ ...prev, descricao: e.target.value }))}
+                className="flex-1 min-w-0"
+              />
+              <Input
+                placeholder="Horas"
+                type="number"
+                value={tarefaForm.qtdHoras || ''}
+                onChange={(e) => setTarefaForm(prev => ({ ...prev, qtdHoras: parseFloat(e.target.value) || 0 }))}
+                className="w-24 flex-shrink-0"
+              />
+            </div>
             <div className="flex gap-2">
               <Button variant="secondary" onClick={handleSaveTarefa} disabled={savingTarefa} className="flex-1">
                 {savingTarefa ? 'Salvando...' : 'Salvar'}
@@ -263,7 +284,12 @@ export default function Projetos() {
                 className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/30 group transition-colors"
               >
                 <div className="min-w-0 flex-1">
-                  <p className="font-medium">{tarefa.nome}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium">{tarefa.nome}</p>
+                    {tarefa.qtdHoras > 0 && (
+                      <span className="text-xs bg-muted px-2 py-0.5 rounded">{tarefa.qtdHoras}h</span>
+                    )}
+                  </div>
                   {tarefa.descricao && (
                     <p className="text-sm text-muted-foreground mt-0.5">{tarefa.descricao}</p>
                   )}

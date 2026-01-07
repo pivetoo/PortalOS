@@ -2,7 +2,9 @@ namespace PortalOS.Domain.ValueObjects
 {
     public enum StatusProjeto
     {
-        Ativo = 0,
-        Inativo = 1
+        AguardandoInicio = 0,
+        EmAndamento = 1,
+        EmHomologacao = 2,
+        Entregue = 3
     }
 }

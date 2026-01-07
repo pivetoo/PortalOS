@@ -1,7 +1,16 @@
 export const StatusProjeto = {
-  Ativo: 0,
-  Inativo: 1
+  AguardandoInicio: 0,
+  EmAndamento: 1,
+  EmHomologacao: 2,
+  Entregue: 3
 } as const;
+
+export const StatusProjetoLabels: Record<number, string> = {
+  0: 'Aguardando Início',
+  1: 'Em Andamento',
+  2: 'Em Homologação',
+  3: 'Entregue'
+};
 
 export type StatusProjeto = typeof StatusProjeto[keyof typeof StatusProjeto];
 
@@ -13,7 +22,6 @@ export interface Projeto {
   responsavel: string;
   emailResponsavel: string;
   statusProjeto: StatusProjeto;
-  qtdTotalHoras: number;
 }
 
 export interface CreateProjetoRequest {
@@ -22,7 +30,6 @@ export interface CreateProjetoRequest {
   responsavel: string;
   emailResponsavel: string;
   statusProjeto: StatusProjeto;
-  qtdTotalHoras: number;
 }
 
 export interface UpdateProjetoRequest extends CreateProjetoRequest {

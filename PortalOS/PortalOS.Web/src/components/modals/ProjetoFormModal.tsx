@@ -16,7 +16,7 @@ import {
 } from 'd-rts';
 import { projetoService } from '../../services/projetoService';
 import { clienteService } from '../../services/clienteService';
-import { StatusProjeto } from '../../types/projeto';
+import { StatusProjeto, StatusProjetoLabels } from '../../types/projeto';
 import type { Projeto, CreateProjetoRequest } from '../../types/projeto';
 import type { Cliente } from '../../types/cliente';
 
@@ -32,8 +32,7 @@ const initialFormData: CreateProjetoRequest = {
   nome: '',
   responsavel: '',
   emailResponsavel: '',
-  statusProjeto: StatusProjeto.Ativo,
-  qtdTotalHoras: 0,
+  statusProjeto: StatusProjeto.AguardandoInicio,
 };
 
 export default function ProjetoFormModal({ open, onOpenChange, projeto, onSuccess }: ProjetoFormModalProps) {
@@ -70,7 +69,6 @@ export default function ProjetoFormModal({ open, onOpenChange, projeto, onSucces
         responsavel: projeto.responsavel,
         emailResponsavel: projeto.emailResponsavel,
         statusProjeto: projeto.statusProjeto,
-        qtdTotalHoras: projeto.qtdTotalHoras,
       });
     } else {
       setFormData(initialFormData);
@@ -131,7 +129,7 @@ export default function ProjetoFormModal({ open, onOpenChange, projeto, onSucces
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="responsavel" className="text-sm font-medium">Responsavel</label>
+              <label htmlFor="responsavel" className="text-sm font-medium">Responsável</label>
               <Input
                 id="responsavel"
                 value={formData.responsavel}
@@ -140,22 +138,12 @@ export default function ProjetoFormModal({ open, onOpenChange, projeto, onSucces
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="emailResponsavel" className="text-sm font-medium">Email Responsavel</label>
+              <label htmlFor="emailResponsavel" className="text-sm font-medium">Email Responsável</label>
               <Input
                 id="emailResponsavel"
                 type="email"
                 value={formData.emailResponsavel}
                 onChange={(e) => handleChange('emailResponsavel', e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label htmlFor="qtdTotalHoras" className="text-sm font-medium">Qtd Total Horas</label>
-              <Input
-                id="qtdTotalHoras"
-                type="number"
-                value={formData.qtdTotalHoras}
-                onChange={(e) => handleChange('qtdTotalHoras', parseFloat(e.target.value) || 0)}
               />
             </div>
 
@@ -169,8 +157,9 @@ export default function ProjetoFormModal({ open, onOpenChange, projeto, onSucces
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="0">Ativo</SelectItem>
-                  <SelectItem value="1">Inativo</SelectItem>
+                  {Object.entries(StatusProjetoLabels).map(([value, label]) => (
+                    <SelectItem key={value} value={value}>{label}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

@@ -12,7 +12,7 @@ export const projetoService = {
       oDataParams.$filter = ODataHelper.createSearchFilter(params.search, ['nome', 'responsavel']);
     }
 
-    oDataParams.$select = 'Id,Nome,Responsavel,EmailResponsavel,StatusProjeto,QtdTotalHoras';
+    oDataParams.$select = 'Id,Nome,Responsavel,EmailResponsavel,StatusProjeto';
     oDataParams.$expand = 'Cliente($select=Id,RazaoSocial)';
 
     const query = ODataHelper.buildQuery(oDataParams);

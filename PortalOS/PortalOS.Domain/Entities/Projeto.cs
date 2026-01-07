@@ -15,8 +15,6 @@ namespace PortalOS.Domain.Entities
 
         public StatusProjeto StatusProjeto { get; set; }
 
-        public decimal QtdTotalHoras { get; set; }
-
         public Cliente Cliente { get; set; }
     }
 }

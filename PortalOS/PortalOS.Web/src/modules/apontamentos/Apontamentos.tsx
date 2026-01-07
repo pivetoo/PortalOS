@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Clock, Plus, Pencil, Trash2, Printer, FileText } from 'lucide-react';
+import { Clock, Plus, Pencil, Trash2, Printer, FileText, CalendarRange } from 'lucide-react';
 import { PageLayout, Card, CardContent, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Button, toast, useApi, Modal, ModalContent, ModalHeader, ModalTitle, ModalFooter, Input } from 'd-rts';
 import { ordemServicoService } from '../../services/ordemServicoService';
+import { relatorioService } from '../../services/relatorioService';
 import { clienteService } from '../../services/clienteService';
 import { projetoService } from '../../services/projetoService';
 import { tarefaService } from '../../services/tarefaService';
@@ -69,9 +70,12 @@ export default function Apontamentos() {
   const [projetos, setProjetos] = useState<Projeto[]>([]);
   const [tarefas, setTarefas] = useState<Tarefa[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
+  const [modalPeriodoOpen, setModalPeriodoOpen] = useState(false);
+  const [periodoInicio, setPeriodoInicio] = useState('');
+  const [periodoFim, setPeriodoFim] = useState('');
   const [form, setForm] = useState<ApontamentoForm>(emptyForm());
 
-  const anos = Array.from({ length: 5 }, (_, i) => (anoAtual - 2 + i).toString());
+  const anos = [anoAtual.toString(), (anoAtual - 1).toString()];
 
   const { execute: loadOrdens, loading: loadingOrdens } = useApi();
   const { execute: loadClientes } = useApi();
@@ -238,7 +242,7 @@ export default function Apontamentos() {
 
   const handlePrint = async (ap: OrdemServico) => {
     try {
-      await ordemServicoService.downloadPdf(ap.id);
+      await relatorioService.downloadPdfOrdemServico(ap.id);
       toast({ title: 'PDF gerado com sucesso', variant: 'success' });
     } catch {
       toast({ title: 'Erro ao gerar PDF', variant: 'destructive' });
@@ -247,10 +251,33 @@ export default function Apontamentos() {
 
   const handleRelatorioMensal = async () => {
     try {
-      await ordemServicoService.downloadRelatorioMensal(parseInt(ano), parseInt(mes));
-      toast({ title: 'Relatorio gerado com sucesso', variant: 'success' });
+      await relatorioService.downloadRelatorioMensal(parseInt(ano), parseInt(mes));
+      toast({ title: 'Relatório gerado com sucesso', variant: 'success' });
     } catch {
-      toast({ title: 'Erro ao gerar relatorio', variant: 'destructive' });
+      toast({ title: 'Erro ao gerar relatório', variant: 'destructive' });
+    }
+  };
+
+  const openModalPeriodo = () => {
+    const hoje = new Date();
+    const primeiroDia = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+    setPeriodoInicio(primeiroDia.toISOString().split('T')[0]);
+    setPeriodoFim(hoje.toISOString().split('T')[0]);
+    setModalPeriodoOpen(true);
+  };
+
+  const handleRelatorioPorPeriodo = async () => {
+    if (!periodoInicio || !periodoFim) {
+      toast({ title: 'Selecione as datas de início e fim', variant: 'destructive' });
+      return;
+    }
+    try {
+      await relatorioService.downloadPdfPorPeriodo(periodoInicio, periodoFim);
+      toast({ title: 'Relatório gerado com sucesso', variant: 'success' });
+      setModalPeriodoOpen(false);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Erro ao gerar relatório';
+      toast({ title: message, variant: 'destructive' });
     }
   };
 
@@ -304,7 +331,11 @@ export default function Apontamentos() {
                 </div>
                 <Button variant="outline" onClick={handleRelatorioMensal} className="gap-2">
                   <FileText size={16} />
-                  Relatorio Mensal
+                  Relatório Mensal
+                </Button>
+                <Button variant="outline" onClick={openModalPeriodo} className="gap-2">
+                  <CalendarRange size={16} />
+                  Relatório por Período
                 </Button>
               </div>
             </div>
@@ -584,6 +615,45 @@ export default function Apontamentos() {
             </Button>
             <Button onClick={handleSave} disabled={saving || !canSave()}>
               {saving ? 'Salvando...' : 'Salvar'}
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      <Modal open={modalPeriodoOpen} onOpenChange={setModalPeriodoOpen}>
+        <ModalContent size="md">
+          <ModalHeader>
+            <ModalTitle>Relatório por Período</ModalTitle>
+          </ModalHeader>
+
+          <div className="grid grid-cols-2 gap-4 py-4">
+            <div className="space-y-2">
+              <label htmlFor="periodoInicio" className="text-sm font-medium">Data Início</label>
+              <Input
+                id="periodoInicio"
+                type="date"
+                value={periodoInicio}
+                onChange={(e) => setPeriodoInicio(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="periodoFim" className="text-sm font-medium">Data Fim</label>
+              <Input
+                id="periodoFim"
+                type="date"
+                value={periodoFim}
+                onChange={(e) => setPeriodoFim(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <ModalFooter>
+            <Button variant="outline" onClick={() => setModalPeriodoOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleRelatorioPorPeriodo} disabled={!periodoInicio || !periodoFim}>
+              Gerar PDF
             </Button>
           </ModalFooter>
         </ModalContent>

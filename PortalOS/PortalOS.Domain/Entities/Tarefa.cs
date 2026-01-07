@@ -10,6 +10,8 @@ namespace PortalOS.Domain.Entities
 
         public string Descricao { get; set; }
 
+        public decimal QtdHoras { get; set; }
+
         public Projeto Projeto { get; set; }
     }
 }

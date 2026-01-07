@@ -7,6 +7,7 @@ namespace PortalOS.Domain.ViewModels
         public long ProjetoId { get; set; }
         public string Nome { get; set; }
         public string Descricao { get; set; }
+        public decimal QtdHoras { get; set; }
     }
 
     public class UpdateTarefaRequest
@@ -15,6 +16,7 @@ namespace PortalOS.Domain.ViewModels
         public long ProjetoId { get; set; }
         public string Nome { get; set; }
         public string Descricao { get; set; }
+        public decimal QtdHoras { get; set; }
     }
 
     public class TarefaResponse
@@ -24,6 +26,7 @@ namespace PortalOS.Domain.ViewModels
         public string ProjetoNome { get; set; }
         public string Nome { get; set; }
         public string Descricao { get; set; }
+        public decimal QtdHoras { get; set; }
 
         public static TarefaResponse FromEntity(Tarefa tarefa)
         {
@@ -33,7 +36,8 @@ namespace PortalOS.Domain.ViewModels
                 ProjetoId = tarefa.Projeto?.Id ?? 0,
                 ProjetoNome = tarefa.Projeto?.Nome,
                 Nome = tarefa.Nome,
-                Descricao = tarefa.Descricao
+                Descricao = tarefa.Descricao,
+                QtdHoras = tarefa.QtdHoras
             };
         }
     }

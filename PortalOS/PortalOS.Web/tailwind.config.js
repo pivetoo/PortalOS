@@ -3,7 +3,7 @@ export default {
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
-    "./node_modules/d-rts/d-rts/dist/**/*.{js,mjs}",
+    "./libs/d-rts/dist/**/*.{js,mjs}",
   ],
   theme: {
     extend: {

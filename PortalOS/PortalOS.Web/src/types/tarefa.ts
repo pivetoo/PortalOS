@@ -4,12 +4,14 @@ export interface Tarefa {
   projetoNome: string;
   nome: string;
   descricao: string;
+  qtdHoras: number;
 }
 
 export interface CreateTarefaRequest {
   projetoId: number;
   nome: string;
   descricao: string;
+  qtdHoras: number;
 }
 
 export interface UpdateTarefaRequest extends CreateTarefaRequest {

@@ -13,7 +13,6 @@
     <property name="Responsavel" column="Responsavel" type="string"  length="5000"  not-null="false" />
     <property name="EmailResponsavel" column="EmailResponsavel" type="string"  length="5000"  not-null="false" />
     <property name="StatusProjeto" column="StatusProjeto" not-null="true" />
-    <property name="QtdTotalHoras" column="QtdTotalHoras" type="decimal"  not-null="true" />
 
     <many-to-one name="Cliente" class="PortalOS.Domain.Entities.Cliente" column="ClienteId" not-null="false" index="idx_projeto_cliente" foreign-key="fk_projeto_cliente" />
   </class>

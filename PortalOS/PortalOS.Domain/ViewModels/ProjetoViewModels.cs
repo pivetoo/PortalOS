@@ -10,7 +10,6 @@ namespace PortalOS.Domain.ViewModels
         public string Responsavel { get; set; }
         public string EmailResponsavel { get; set; }
         public StatusProjeto StatusProjeto { get; set; }
-        public decimal QtdTotalHoras { get; set; }
     }
 
     public class UpdateProjetoRequest
@@ -21,7 +20,6 @@ namespace PortalOS.Domain.ViewModels
         public string Responsavel { get; set; }
         public string EmailResponsavel { get; set; }
         public StatusProjeto StatusProjeto { get; set; }
-        public decimal QtdTotalHoras { get; set; }
     }
 
     public class ProjetoResponse
@@ -33,7 +31,6 @@ namespace PortalOS.Domain.ViewModels
         public string Responsavel { get; set; }
         public string EmailResponsavel { get; set; }
         public StatusProjeto StatusProjeto { get; set; }
-        public decimal QtdTotalHoras { get; set; }
 
         public static ProjetoResponse FromEntity(Projeto projeto)
         {
@@ -45,8 +42,7 @@ namespace PortalOS.Domain.ViewModels
                 Nome = projeto.Nome,
                 Responsavel = projeto.Responsavel,
                 EmailResponsavel = projeto.EmailResponsavel,
-                StatusProjeto = projeto.StatusProjeto,
-                QtdTotalHoras = projeto.QtdTotalHoras
+                StatusProjeto = projeto.StatusProjeto
             };
         }
     }

@@ -93,7 +93,7 @@ export default function ClienteFormModal({ open, onOpenChange, cliente, onSucces
         <form onSubmit={handleSubmit} className="space-y-4">
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
             <div style={{ gridColumn: 'span 2' }} className="space-y-2">
-              <label htmlFor="razaoSocial" className="text-sm font-medium">Razao Social</label>
+              <label htmlFor="razaoSocial" className="text-sm font-medium">Razão Social</label>
               <Input
                 id="razaoSocial"
                 value={formData.razaoSocial}
@@ -111,7 +111,7 @@ export default function ClienteFormModal({ open, onOpenChange, cliente, onSucces
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="responsavel" className="text-sm font-medium">Responsavel</label>
+              <label htmlFor="responsavel" className="text-sm font-medium">Responsável</label>
               <Input
                 id="responsavel"
                 value={formData.responsavel}
@@ -129,7 +129,7 @@ export default function ClienteFormModal({ open, onOpenChange, cliente, onSucces
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="emailResponsavel" className="text-sm font-medium">Email Responsavel</label>
+              <label htmlFor="emailResponsavel" className="text-sm font-medium">Email Responsável</label>
               <Input
                 id="emailResponsavel"
                 type="email"
@@ -149,7 +149,7 @@ export default function ClienteFormModal({ open, onOpenChange, cliente, onSucces
             </div>
 
             <div style={{ gridColumn: 'span 2' }} className="space-y-2">
-              <label htmlFor="endereco" className="text-sm font-medium">Endereco</label>
+              <label htmlFor="endereco" className="text-sm font-medium">Endereço</label>
               <Input
                 id="endereco"
                 value={formData.endereco}
